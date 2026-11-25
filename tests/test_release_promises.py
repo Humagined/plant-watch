@@ -227,7 +227,7 @@ def test_readiness_is_worked_out_from_the_findings(demo):
     by = {c["key"]: c for c in r["checks"]}
     assert r["measured"] == 5 and 0 <= r["score"] <= 100
     assert by["records"]["total"] - by["records"]["good"] == 67          # 66 drifted and one transposed
-    assert 0 < by["meaning"]["share"] < 1 and 0 < by["reports"]["share"] < 1 and by["spreadsheets"]["share"] < 1
+    assert 0 < by["meaning"]["share"] < 1 and 0 < by["reports"]["share"] < 1 and by["sources"]["share"] < 1 and len(by["sources"]["parts"]) == 2
     report.render(cfg, state, state.parent / "r.html", str(state.parent / "r.pdf"))
     html = (state.parent / "r.html").read_text(encoding="utf-8")
     assert "Are you ready for AI agents?" in html and f"<b>{r['score']}</b>" in html
@@ -245,3 +245,20 @@ def test_readiness_needs_enough_to_measure_and_one_weak_check_holds_it_back():
     assert r["measured"] == 4 and r["score"] == 64 and r["band"] == "Getting there" and r["next"] == ["owners"]
     owned = {"metrics": {"downtime": {"status": "confirmed", "owner": {"name": "Pat Lee"}}}}
     assert readiness.assess(cfg, facts, [], owned, 100)["score"] == 100
+
+
+def test_an_export_that_cannot_be_read_is_reported_and_counted_not_a_crash(demo):
+    base, cfg, state = demo
+    before = {c["key"]: c for c in watch.run(cfg, state, date(2026, 11, 25))["readiness"]["checks"]}["sources"]
+    ex = base / "plant" / "exports"
+    (ex / "mes_production_output_2026-11-24.csv").write_text("production_day,shift\n", encoding="utf-8")      # no rows
+    good = ex / "mes_downtime_events_2026-11-24.csv"
+    good.write_bytes(good.read_text(encoding="utf-8").replace("Broken end mill", "Temp 40\u00b0").encode("cp1252"))  # Excel on Windows
+    (base / "plant" / "spreadsheets" / "supervisor_shift_log_Nov.xlsx").write_bytes(b"not a workbook")
+    r = watch.run(cfg, state, date(2026, 11, 25))
+    import ledger
+    kinds = [e["kind"] for e in ledger.load(state).values() if e["active"]]
+    assert kinds.count("source_unreadable") == 1 and "workbook_unreadable" in kinds
+    after = {c["key"]: c for c in r["readiness"]["checks"]}["sources"]
+    assert after["parts"][-1]["good"] < before["parts"][-1]["good"]
+    report.render(cfg, state, state.parent / "r.html", str(state.parent / "r.pdf"))

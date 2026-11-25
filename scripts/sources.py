@@ -27,9 +27,12 @@ file headers, the person confirms it) and then read by code on every run:
 
 import csv
 import glob
+import io
 import json
 import os
 import re
+import xml.etree.ElementTree as ET
+import zipfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -110,9 +113,12 @@ def read_table(path, sheet=None):
                 rows.append(dict(zip(header, vals)))
                 nums.append(r)
         return header, rows, nums
-    with p.open(newline="", encoding="utf-8-sig") as f:
-        rd = csv.reader(f)
-        raw = list(rd)
+    data = p.read_bytes()
+    try:
+        text = data.decode("utf-16" if data[:2] in (b"\xff\xfe", b"\xfe\xff") else "utf-8-sig")
+    except UnicodeDecodeError:
+        text = data.decode("cp1252", "replace")       # what Excel on Windows saves a plain CSV as
+    raw = list(csv.reader(io.StringIO(text, newline="")))
     if not raw:
         return [], [], []
     header = [h.strip() for h in raw[0]]
@@ -120,9 +126,38 @@ def read_table(path, sheet=None):
     return header, rows, list(range(2, len(rows) + 2))
 
 
+UNREADABLE = (OSError, ValueError, KeyError, csv.Error, zipfile.BadZipFile, ET.ParseError)
+
+
+def table(path, sheet=None):
+    """read_table, with a file that can't be read as an empty one. data_files() reports it."""
+    try:
+        return read_table(path, sheet)
+    except UNREADABLE:
+        return [], [], []
+
+
+def data_files(cfg):
+    """[(source, path, problem or None)] for each export or workbook a source reads its rows from."""
+    out = []
+    for src in cfg["sources"]:
+        if src.get("kind") not in ("rows", "events", "codes", "master"):
+            continue
+        for path in files_for(cfg, src):
+            try:
+                _, rows, _ = read_table(path, src.get("sheet"))
+                out.append((src, path, None if rows else "it has no rows"))
+            except UNREADABLE as e:
+                out.append((src, path, f"it couldn't be read ({e})"))
+    return out
+
+
 def sheet_lines(path, sheet):
     """Free text of a sheet (a Notes tab), one line per non-empty row."""
-    wb = xa.Workbook(path)
+    try:
+        wb = xa.Workbook(path)
+    except UNREADABLE:
+        return []
     if sheet not in wb.sheet_names:
         return []
     cells = wb.cells[sheet]
@@ -142,7 +177,7 @@ def facts(cfg, as_of=None):
         if src.get("kind") not in ("rows", "events"):
             continue
         for path in files_for(cfg, src):
-            header, rows, nums = read_table(path, src.get("sheet"))
+            header, rows, nums = table(path, src.get("sheet"))
             for row, rn in zip(rows, nums):
                 d = to_date(row.get(src["date"]))
                 if d is None or (as_of and d > as_of):
@@ -165,7 +200,7 @@ def codes(cfg):
         if src.get("kind") != "codes":
             continue
         for path in files_for(cfg, src):
-            _, rows, _ = read_table(path)
+            _, rows, _ = table(path)
             out[src["id"]] = {str(r[src["code"]]).strip(): {k: str(r.get(k, "")).strip() for k in src.get("flags", {})}
                               for r in rows}
     return out
@@ -175,7 +210,7 @@ def master_keys(cfg, src_id):
     src = next(s for s in cfg["sources"] if s["id"] == src_id)
     keys = set()
     for path in files_for(cfg, src):
-        _, rows, _ = read_table(path)
+        _, rows, _ = table(path)
         keys |= {str(r[src["key"]]).strip() for r in rows if r.get(src["key"])}
     return keys
 
@@ -196,7 +231,7 @@ def headers(cfg):
         if src.get("kind") in ("rows", "events", "master", "codes"):
             fs = files_for(cfg, src)
             if fs:
-                out[src["id"]] = read_table(fs[-1], src.get("sheet"))[0]
+                out[src["id"]] = table(fs[-1], src.get("sheet"))[0]
     return out
 
 
@@ -213,7 +248,6 @@ def _all_workbooks(cfg):
 def _formula_print(path):
     """Same sheets and same formulas in the same cells: the same workbook, whatever values it last saved."""
     import hashlib
-    import zipfile
     h = hashlib.sha256()
     try:
         with safeio.open_book(path) as z:

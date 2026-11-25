@@ -249,6 +249,13 @@ def run(cfg, state, as_of=None):
         for p in S.files_for(cfg, src):
             if p.suffix.lower() in (".xlsx", ".xlsm"):
                 registered[p.name] = src.get("stage") or detect.stage_of(next(iter(src.get("measures", {}) or [None]), None))
+    data_files = S.data_files(cfg)
+    for src, p, problem in data_files:
+        if problem and p.suffix.lower() not in (".xlsx", ".xlsm"):       # the Excel audit reports those
+            findings.append({"kind": "source_unreadable", "category": "keys", "metric": None, "stage": src.get("stage"),
+                             "onset": None, "sources": [src["id"]], "title": f"{p.name}: no data read from this file",
+                             "detail": f"This file was skipped because {problem}.", "evidence": {"file": p.name},
+                             "question": "Was this export saved correctly?", "id_parts": [src["id"], p.name]})
     audits, formula_cells = [], 0
     copies = S.workbook_copies(cfg)
 
@@ -264,6 +271,9 @@ def run(cfg, state, as_of=None):
             findings.append({"kind": "workbook_unreadable", "category": "excel", "metric": None, "stage": None,
                              "onset": None, "workbook": wb.name, "sheet": None, "cell": None,
                              "title": f"{wb.name}: couldn't be read", "detail": str(e), "question": None,
+                             "problem": f"This workbook couldn't be read, so it wasn't checked ({e}).", "formula": None, "cached": None,
+                             "fix": "Open it in Excel and save it again as .xlsx. Remove a password if it has one.",
+                             "severity": 1, "severity_label": "Broken",
                              "id_parts": [wb.name, "unreadable"]})
             continue
         formula_cells += a["formula_cells"]
@@ -276,7 +286,7 @@ def run(cfg, state, as_of=None):
         if f.get("onset") is None:
             f["onset"] = None
     delta = ledger.update(state, findings, as_of)
-    ready = readiness.assess(cfg, facts, ledger.load(state).values(), read_json(state / "dictionary.json", {}), formula_cells)
+    ready = readiness.assess(cfg, facts, ledger.load(state).values(), read_json(state / "dictionary.json", {}), formula_cells, data_files)
     snap = {"date": as_of.isoformat(), "codes": codes, "headers": hdrs, "notes": notes, "links": links,
             "audits": audits, "readiness": ready, "dictionary_version": read_json(state / "dictionary.json", {}).get("version")}
     safeio.save_state(state / "snapshots" / f"{as_of.isoformat()}.json", json.dumps(snap, indent=2, default=str))

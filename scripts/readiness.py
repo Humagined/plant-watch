@@ -1,7 +1,7 @@
 """Readiness for AI agents: a score from 0 to 100 worked out from the findings. Standard library only.
 
 An agent answers with whatever it finds, so what matters is whether the numbers mean one thing, the records
-connect, the spreadsheets hold up, each number has an owner, and the reports match the data. Those are the parts
+connect, the data sources hold up, each number has an owner, and the reports match the data. Those are the parts
 a knowledge graph is built from; the report says it in plain words. Five checks, 20 points each. A check with
 nothing to measure is left out and the rest are scaled, and the report says so. Fewer than three checks: no score.
 
@@ -21,9 +21,9 @@ CHECKS = {
     "records": ("Do your records connect?",
                 "An agent follows a job from one system to another by its number. A number that doesn't match is a dead end.",
                 "Agree on one format for job numbers, and correct the ones that don't match."),
-    "spreadsheets": ("Do your data sources hold up?",
-                     "An agent reads a broken formula's result as if it were right.",
-                     "Fix the spreadsheet problems listed first."),
+    "sources": ("Do your data sources hold up?",
+                     "An agent reads a broken formula's result as if it were right, and can't see a day that didn't export.",
+                     "Fix the spreadsheet problems listed first, and any export that is missing or unreadable."),
     "owners": ("Does someone own each number?",
                "When an agent meets a question, someone has to answer it.",
                "Name an owner for each number, and confirm what it means."),
@@ -41,7 +41,14 @@ def check(key, good, total, unit):
     return {"key": key, "good": good, "total": total, "unit": unit, "share": (good / total) if total else None}
 
 
-def assess(cfg, facts, entries, dictionary, formula_cells):
+def combine(key, parts):
+    """Several counts as one check: the average of the parts that could be measured."""
+    parts = [p for p in parts if p["share"] is not None]
+    share = sum(p["share"] for p in parts) / len(parts) if parts else None
+    return {"key": key, "share": share, "parts": parts}
+
+
+def assess(cfg, facts, entries, dictionary, formula_cells, data_files=()):
     active = [e for e in entries if e.get("active")]
     metrics = dictionary.get("metrics") or {}
     formulas = dictionary.get("formulas") or {}
@@ -69,7 +76,16 @@ def assess(cfg, facts, entries, dictionary, formula_cells):
 
     # Spreadsheets: formula cells with no problem flagged on them.
     flagged = {(e["workbook"], e.get("sheet"), e.get("cell")) for e in active if e["category"] == "excel" and e.get("formula")}
-    out.append(check("spreadsheets", max(0, formula_cells - len(flagged)), formula_cells, "formulas had no problem flagged"))
+    # Data sources: the formulas, and the files rows come from. A day with no rows counts as a file that isn't there.
+    # Half each when both can be measured, so thousands of formulas don't drown out a missing export.
+    missing = sum(e["kind"] == "missing_day" for e in active)
+    bad_books = {e["workbook"] for e in active if e["kind"] == "workbook_unreadable"}
+    paths = {p: problem for _, p, problem in data_files}
+    extra = len(bad_books - {p.name for p in paths})
+    good_files = sum(not problem and p.name not in bad_books for p, problem in paths.items())
+    c = combine("sources", [check("", max(0, formula_cells - len(flagged)), formula_cells, "formulas had no problem flagged"),
+                            check("", good_files, len(paths) + missing + extra, "expected data files were there and readable")])
+    out.append(c)
 
     # Owners: the shared numbers a person has confirmed and put a name to.
     named = [metrics.get(m) or {} for m in shared] + [formulas.get(g["label"].lower()) or {} for g in labels]

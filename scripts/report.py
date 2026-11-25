@@ -68,7 +68,7 @@ def excel_groups(entries):
         first, last = xs[0], xs[-1]
         n = len(xs)
         if n == 1:
-            where = first["cell"]
+            where = first["cell"] or "the file"
         elif first["kind"] == "hidden_row_in_range":
             where = f"rows {first['cell'][1:]}–{last['cell'][1:]}"
         else:
@@ -253,7 +253,8 @@ def ready_lines(m):
     rows = []
     for c in r["checks"]:
         title, why, _ = readiness.CHECKS[c["key"]]
-        result = "Not measured: the files read don't show it." if c["share"] is None else f"{c['good']:,} of {c['total']:,} {c['unit']}."
+        result = "Not measured: the files read don't show it." if c["share"] is None else \
+            " ".join(f"{p['good']:,} of {p['total']:,} {p['unit']}." for p in c.get("parts") or [c])
         rows.append((title, why, result, None if c["share"] is None else int(100 * c["share"])))
     note = f"Scored on {r['measured']} of {len(r['checks'])} checks, with equal weight, from the files read for this report."
     if r.get("held_back"):
