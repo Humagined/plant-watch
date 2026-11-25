@@ -372,7 +372,7 @@ def audit(path, period_hint=None):
             continue
         if "#REF!" in target:
             add("broken_defined_name", None, name, f"The name {name} points to {target}: what it referred to was deleted.",
-                f"Point {name} at the right range again (Formulas > Name Manager), or delete it if nothing uses it.",
+                f"Point {name} at the right range again (Formulas > Name Manager), or delete it if it isn't used.",
                 formula=target)
         else:
             for r in refs_in(target, None):

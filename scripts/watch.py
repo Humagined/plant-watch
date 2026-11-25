@@ -79,7 +79,15 @@ def scan(folder):
                 g["first_lines"] = (pg[0] or [])[:6] if pg else []
         except Exception as e:
             g["error"] = str(e)
-    return {"folder": str(folder), "groups": list(groups.values())}
+    read = [g for g in groups.values() if g["type"] in ("csv", "xlsx", "xlsm", "pdf") and "error" not in g]
+    by_type = {}
+    for g in read:
+        by_type[g["type"]] = by_type.get(g["type"], 0) + g["files"]
+    return {"folder": str(folder), "files": sum(g["files"] for g in groups.values()),
+            "can_read": sum(g["files"] for g in read), "can_read_by_type": by_type,
+            "not_read": [{"pattern": g["pattern"], "files": g["files"], "why": g.get("error") or f"{g['type'] or 'unknown'} files aren't read"}
+                         for g in groups.values() if g not in read],
+            "groups": list(groups.values())}
 
 
 def inventory(cfg):

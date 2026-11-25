@@ -1,6 +1,6 @@
 ---
 name: watch-setup
-description: First run of Plant Watch. Finds the plant's exports, spreadsheets, PDF reports and report links, works out which metrics appear in more than one place, asks the person once what each metric should mean, then produces the comprehensive Metric Mismatch Report organized by value stream, with a full Excel audit and suggested first use cases. Use when someone says "set up plant watch", "check my plant data", "find where our numbers disagree", "audit our spreadsheets", "metric mismatch report", or when the watch skill finds no setup.
+description: First run of Plant Watch. Finds the plant's exports, spreadsheets, PDF reports and report links, works out which metrics appear in more than one place, asks the person once what each metric should mean, then produces the Metric Mismatch Report organized by value stream, with an Excel audit and suggested first use cases. Use when someone says "set up plant watch", "check my plant data", "find where our numbers disagree", "audit our spreadsheets", "metric mismatch report", or when the watch skill finds no setup.
 ---
 
 # Plant Watch setup (first run)
@@ -8,6 +8,12 @@ description: First run of Plant Watch. Finds the plant's exports, spreadsheets, 
 The person runs a plant or its numbers (plant manager, controller, COO). Plain words,
 one question at a time, a sensible default with each. Never show JSON or commands
 unless asked.
+
+**Say what was read, not "all".** Don't claim blanket coverage: no "all your data", "every file",
+"everything", "complete", "fully", "always", "never" or "nothing" about what Plant Watch read, checked
+or found. Give the counts from the script and name what wasn't read, for example "I read 41 of the 43
+files in that folder. I didn't read two Word files." A clean result is "no mismatches found in what I
+read", not "your data is clean".
 
 **Code finds, you explain.** Every check and number comes from the script. You draft
 the configuration, ask the questions, read PDFs into figures, and explain results. Never
@@ -30,7 +36,8 @@ Then: "Any reports you'd like checked against the data, as PDFs or links (ShareP
 OneDrive)?" Accept uploads and links. A link is read through the person's own Microsoft 365
 connector, only when they give one and only to read it. Say so before the first one.
 
-Run `scan <folder>`. From the groups it returns, draft `plant-watch/sources.json` in
+Run `scan <folder>`. Tell them its counts first: files found, files it can read by type, and the
+`not_read` files by name or type. From the groups it returns, draft `plant-watch/sources.json` in
 the shape in `reference/sources.md`. Show it as a short plain list, one line per
 source: what it is, what it measures, its date and machine columns, which file is the
 record. Ask "Does that match how your plant works?" and fix what they correct. Write it

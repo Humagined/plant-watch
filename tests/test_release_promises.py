@@ -188,3 +188,32 @@ def test_command_line_refusal_is_plain_json(tmp_path):
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "watch.py"), "inventory", "--config", str(tmp_path / "s.json")],
                        capture_output=True, text=True)
     assert r.returncode == 1 and json.loads(r.stdout)["ok"] is False
+
+
+BLANKET = r"\b(all|every|everything|everywhere|always|never|nothing|complete|completely|comprehensive|fully|guaranteed?)\b"
+
+
+def test_copy_makes_no_blanket_claims(demo):
+    """People-facing text says what was read and what wasn't. (Instructions to Claude in the skills may say 'never'.)"""
+    import re
+    _, cfg, state = demo
+    for p in (ROOT / "README.md", ROOT / "SECURITY.md", DEMO / "README.md", ROOT / "guide" / "setup-guide.html",
+              ROOT / ".claude-plugin" / "plugin.json", ROOT / "data" / "use_cases.json"):
+        assert not re.findall(BLANKET, p.read_text(encoding="utf-8"), re.I), p
+    for p in (ROOT / "skills").glob("*/SKILL.md"):
+        desc = re.search(r"^description:(.*)$", p.read_text(encoding="utf-8"), re.M).group(1)
+        assert not re.findall(BLANKET, desc, re.I), p
+    watch.run(cfg, state, date(2026, 11, 25))
+    out = state.parent / "r.html"
+    report.render(cfg, state, out)
+    own = re.sub(r"<style.*?</style>|<[^>]+>", " ", out.read_text(encoding="utf-8"), flags=re.S)
+    assert "Excel audit, by workbook" in own
+
+
+def test_scan_says_what_it_can_and_cannot_read(tmp_path):
+    (tmp_path / "a.csv").write_text("x\n1\n", encoding="utf-8")
+    (tmp_path / "notes.docx").write_bytes(b"x")
+    (tmp_path / "bad.xlsx").write_bytes(b"not a workbook")
+    r = watch.scan(tmp_path)
+    assert (r["files"], r["can_read"], r["can_read_by_type"]) == (3, 1, {"csv": 1})
+    assert {n["pattern"] for n in r["not_read"]} == {"notes.docx", "bad.xlsx"}

@@ -7,7 +7,7 @@ body:
       value: |
         Tell us what would make Plant Watch more useful on your floor. Humagined reviews ideas on a best-effort basis.
 
-        **Never paste real plant data here.**
+        **Please don't paste real plant data here.**
   - type: textarea
     id: problem
     attributes:

@@ -7,7 +7,7 @@ body:
       value: |
         Thanks for helping make Plant Watch better. Humagined responds on a best-effort basis.
 
-        **Never paste real plant data here.** Use the synthetic shop in `demo/`, or redact names, part numbers, customers and figures first.
+        **Please don't paste real plant data here.** Use the synthetic shop in `demo/`, or redact names, part numbers, customers and figures first.
 
         Security problem? Don't file it here. See SECURITY.md.
   - type: dropdown

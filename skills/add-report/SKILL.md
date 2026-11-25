@@ -1,6 +1,6 @@
 ---
 name: add-report
-description: Adds a report to Plant Watch so its figures get checked against the plant's data. Reads an uploaded PDF or a linked SharePoint/OneDrive report, shows every figure it found with the page and the quoted line, asks the person once what each figure means, and saves a template so later editions are read the same way. Use when someone says "check this report", "add this report", "here's our weekly pack", shares a report PDF or link, or when a report's layout has changed.
+description: Adds a report to Plant Watch so its figures get checked against the plant's data. Reads an uploaded PDF or a linked SharePoint/OneDrive report, shows the figures it found with the page and the quoted line, asks the person once what each figure means, and saves a template so later editions are read the same way. Use when someone says "check this report", "add this report", "here's our weekly pack", shares a report PDF or link, or when a report's layout has changed.
 ---
 
 # Add a report

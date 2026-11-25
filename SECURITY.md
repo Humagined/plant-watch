@@ -17,7 +17,7 @@ Please include:
 - How to reproduce it, using the synthetic shop in `demo/` if you can
 - What you think the impact is
 
-Never send real plant data, credentials, or customer information in a report.
+Please don't send real plant data, credentials, or customer information in a report.
 
 ## What to expect
 

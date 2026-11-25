@@ -1,6 +1,6 @@
 # Northfork Precision, a fictional shop
 
-Everything here is made up. No company, customer, person or machine in these files is real.
+Northfork and the customers, people and machines in these files are made up.
 
 Northfork is a two-cell CNC job shop. The files cover 13 production days, November 9 to 25, 2026.
 Mismatches and spreadsheet faults are planted in them, so you can see what Plant Watch finds.

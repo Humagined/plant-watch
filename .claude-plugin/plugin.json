@@ -2,7 +2,7 @@
   "name": "plant-watch",
   "displayName": "Plant Watch",
   "version": "1.0.0",
-  "description": "Finds where your plant's numbers disagree, and why: metrics that two systems count differently, reports that don't match the data behind them, and broken formulas in your spreadsheets. Works on your own files and sends nothing on its own. Free and open source from Humagined.",
+  "description": "Finds where your plant's numbers disagree, and why: metrics that two systems count differently, reports that don't match the data behind them, and broken formulas in your spreadsheets. Works on your own files. Its code makes no network calls. Free and open source from Humagined.",
   "author": { "name": "Humagined Inc.", "url": "https://www.humagined.ai" },
   "homepage": "https://www.humagined.ai/plantwatch",
   "repository": "https://github.com/humagined/plant-watch",
