@@ -2,3 +2,5 @@
 *.xlsx binary
 *.pdf binary
 *.ttf binary
+*.jpg binary
+*.png binary

@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-INCLUDE = (".claude-plugin/plugin.json", "skills", "scripts", "data", "assets", "demo", "README.md", "LICENSE", "NOTICE", "SECURITY.md")
+INCLUDE = (".claude-plugin/plugin.json", ".claude-plugin/icon.png", "skills", "scripts", "data", "assets", "demo", "README.md", "LICENSE", "NOTICE", "SECURITY.md")
 STAMP = (2026, 12, 1, 0, 0, 0)           # fixed, so the same source gives the same file
 
 

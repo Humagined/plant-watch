@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <!-- black box, like the Humagined H mark -->
+  <rect width="1024" height="1024" rx="56" fill="#000000"/>
+  <!-- factory outline in site slate -->
+  <path d="M170 830 L170 420 L330 320 L330 420 L490 320 L490 420 L650 320 L650 420 L710 420 L710 200 L790 200 L790 420 L854 420 L854 830 Z"
+        fill="none" stroke="#9FB0C2" stroke-width="40" stroke-linejoin="miter"/>
+  <line x1="110" y1="830" x2="914" y2="830" stroke="#9FB0C2" stroke-width="40"/>
+  <!-- eye in front: black halo cuts the factory lines -->
+  <path d="M276 640 Q512 420 748 640 Q512 860 276 640 Z" fill="#000" stroke="#000" stroke-width="96" stroke-linejoin="round"/>
+  <path d="M276 640 Q512 420 748 640 Q512 860 276 640 Z" fill="#000" stroke="#FFFFFF" stroke-width="44" stroke-linejoin="round"/>
+  <!-- split iris: teal and amber, offset -->
+  <path d="M500 556 A74 74 0 0 0 500 704 Z" fill="#3CCFBF"/>
+  <path d="M524 574 A74 74 0 0 1 524 722 Z" fill="#F2A541"/>
+</svg>
