@@ -217,3 +217,29 @@ def test_scan_says_what_it_can_and_cannot_read(tmp_path):
     r = watch.scan(tmp_path)
     assert (r["files"], r["can_read"], r["can_read_by_type"]) == (3, 1, {"csv": 1})
     assert {n["pattern"] for n in r["not_read"]} == {"notes.docx", "bad.xlsx"}
+
+
+def test_readiness_is_worked_out_from_the_findings(demo):
+    base, cfg, state = demo
+    r = watch.run(cfg, state, date(2026, 11, 25))["readiness"]
+    by = {c["key"]: c for c in r["checks"]}
+    assert r["measured"] == 5 and 0 <= r["score"] <= 100
+    assert by["records"]["total"] - by["records"]["good"] == 67          # 66 drifted and one transposed
+    assert 0 < by["meaning"]["share"] < 1 and 0 < by["reports"]["share"] < 1 and by["spreadsheets"]["share"] < 1
+    report.render(cfg, state, state.parent / "r.html", str(state.parent / "r.pdf"))
+    html = (state.parent / "r.html").read_text(encoding="utf-8")
+    assert "Are you ready for AI agents?" in html and f"<b>{r['score']}</b>" in html
+    assert "knowledge graph readiness" in " ".join(" ".join(p) for p in pdftext.pages(state.parent / "r.pdf") if p)
+
+
+def test_readiness_needs_enough_to_measure_and_one_weak_check_holds_it_back():
+    import readiness
+    r = readiness.assess({"sources": [], "folder": ""}, [], [], {}, 0)
+    assert r["score"] is None and r["measured"] == 0
+    facts = [{"source": s, "downtime": 1.0, "key": None} for s in ("a", "b")]
+    cfg = {"folder": "/nowhere-plant-watch", "sources": [{"id": "a", "kind": "rows"}, {"id": "b", "kind": "rows"},
+                                                        {"id": "l", "kind": "link", "label": "Pack"}]}
+    r = readiness.assess(cfg, facts, [], {}, 100)                          # no owners: that check is zero
+    assert r["measured"] == 4 and r["score"] == 64 and r["band"] == "Getting there" and r["next"] == ["owners"]
+    owned = {"metrics": {"downtime": {"status": "confirmed", "owner": {"name": "Pat Lee"}}}}
+    assert readiness.assess(cfg, facts, [], owned, 100)["score"] == 100

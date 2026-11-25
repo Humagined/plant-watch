@@ -22,6 +22,7 @@ Script: `python3 "<this skill's folder>/../../scripts/watch.py"`, with
    - new findings (lead with definition conflicts and reports that disagree with the data,
      then broken spreadsheet formulas by workbook, sheet and cell, then anomalies)
    - anything cleared since last time
+   - the readiness for AI agents score and what moved it, when the run's `readiness` has one
    - one line on the overall state ("31 still open, 2 new, 1 cleared")
    If the findings didn't change, say so in one line. On a scheduled run with nobody there, keep it to
    that summary and the report file.

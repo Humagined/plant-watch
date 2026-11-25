@@ -19,6 +19,18 @@ A holiday gift to manufacturers from [Humagined Inc.](https://www.humagined.ai)
 
 The findings land in one **Metric Mismatch Report**, organized by value stream, with each finding traced to the file, page or cell it came from.
 
+## Are you ready for AI agents?
+
+The report opens with a score from 0 to 100. It asks five plain questions of the files it read:
+
+1. Do your numbers mean one thing?
+2. Do your records connect?
+3. Do your spreadsheets hold up?
+4. Does someone own each number?
+5. Do your reports match your data?
+
+Each check counts the same. One that can't be measured is left out, and the report says so. If a check is under half, the score stays below 65. It isn't a promise about an agent, or about files that weren't read. Data teams call this knowledge graph readiness.
+
 ## What it doesn't do
 
 - **It doesn't send your files or results.** Plant Watch has no cloud service, account or telemetry, and its code makes no network calls. It reads the files you point it at and writes its results in a `plant-watch` folder.

@@ -9,8 +9,19 @@ from pathlib import Path
 
 FONTS = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 METRICS = json.loads((FONTS / "metrics.json").read_text(encoding="utf-8"))
+MARK = FONTS.parent / "humagined-mark.jpg"
 REGULAR, BOLD, DISPLAY = "text-400", "text-600", "display-800"
 ORDER = (REGULAR, BOLD, DISPLAY)
+
+
+def _jpeg_size(data):
+    i = 2
+    while i < len(data):
+        marker, n = data[i + 1], int.from_bytes(data[i + 2:i + 4], "big")
+        if 0xC0 <= marker <= 0xC2:
+            return int.from_bytes(data[i + 7:i + 9], "big"), int.from_bytes(data[i + 5:i + 7], "big")
+        i += 2 + n
+    raise ValueError("not a JPEG")
 
 
 def winansi(text):
@@ -74,6 +85,9 @@ class Page:
         if border:
             self.ops.append(f"{_rgb(border)} RG 0.6 w {x:.1f} {y:.1f} {w:.1f} {h:.1f} re S")
 
+    def image(self, x, y, w, h):
+        self.ops.append(f"q {w:.1f} 0 0 {h:.1f} {x:.1f} {y:.1f} cm /Mark Do Q")
+
     def link(self, x, y, w, h, url):
         self.links.append((x, y, w, h, url))
 
@@ -99,6 +113,10 @@ def pdf(pages):
         fonts.append(add(f"<< /Type /Font /Subtype /TrueType /BaseFont /{m['name']} /Encoding /WinAnsiEncoding "
                          f"/FirstChar 32 /LastChar 255 /Widths [{' '.join(map(str, m['widths']))}] /FontDescriptor {desc} 0 R >>"))
     res = " ".join(f"/F{i} {n} 0 R" for i, n in enumerate(fonts, 1))
+    jpg = MARK.read_bytes()
+    w, h = _jpeg_size(jpg)
+    mark = add(f"<< /Type /XObject /Subtype /Image /Width {w} /Height {h} /ColorSpace /DeviceRGB /BitsPerComponent 8 "
+               f"/Filter /DCTDecode /Length {len(jpg)} >>\nstream\n".encode() + jpg + b"\nendstream")
     kids = []
     for pg in pages:
         content = add(stream("\n".join(pg.ops).encode("cp1252")))
@@ -106,7 +124,7 @@ def pdf(pages):
                       f"/A << /S /URI /URI ({esc(u)}) >> >>") for x, y, w, h, u in pg.links]
         extra = f" /Annots [{' '.join(f'{a} 0 R' for a in annots)}]" if annots else ""
         kids.append(add(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents {content} 0 R "
-                        f"/Resources << /Font << {res} >> >>{extra} >>"))
+                        f"/Resources << /Font << {res} >> /XObject << /Mark {mark} 0 R >> >>{extra} >>"))
     objs[0] = b"<< /Type /Catalog /Pages 2 0 R >>"
     objs[1] = f"<< /Type /Pages /Kids [{' '.join(f'{k} 0 R' for k in kids)}] /Count {len(kids)} >>".encode()
     buf, offsets = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"), []

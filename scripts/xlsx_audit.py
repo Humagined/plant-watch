@@ -710,6 +710,7 @@ def audit(path, period_hint=None):
     F.sort(key=lambda x: (x["severity"], x["sheet"] or "", x["cell"]))
     return {"workbook": wb.name, "path": str(wb.path), "sheets": wb.sheet_names, "checks_run": checks,
             "not_checked": not_checked, "findings": F,
+            "formula_cells": sum(1 for cells in wb.cells.values() for c in cells.values() if c.get("formula")),
             "counts": dict(Counter(f["kind"] for f in F))}
 
 

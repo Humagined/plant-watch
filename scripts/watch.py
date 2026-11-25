@@ -32,6 +32,7 @@ import definitions  # noqa: E402
 import detect  # noqa: E402
 import ledger  # noqa: E402
 import pdftext  # noqa: E402
+import readiness  # noqa: E402
 import safeio  # noqa: E402
 import sources as S  # noqa: E402
 import xlsx_audit as xa  # noqa: E402
@@ -248,7 +249,7 @@ def run(cfg, state, as_of=None):
         for p in S.files_for(cfg, src):
             if p.suffix.lower() in (".xlsx", ".xlsm"):
                 registered[p.name] = src.get("stage") or detect.stage_of(next(iter(src.get("measures", {}) or [None]), None))
-    audits = []
+    audits, formula_cells = [], 0
     copies = S.workbook_copies(cfg)
 
     def shown(p):
@@ -265,6 +266,7 @@ def run(cfg, state, as_of=None):
                              "title": f"{wb.name}: couldn't be read", "detail": str(e), "question": None,
                              "id_parts": [wb.name, "unreadable"]})
             continue
+        formula_cells += a["formula_cells"]
         audits.append({"workbook": a["workbook"], "path": shown(wb), "copies": [shown(c) for c in copies[wb]],
                        "checks_run": a["checks_run"], "not_checked": a["not_checked"]})
         findings += detect.place_excel(cfg, a, registered)
@@ -274,8 +276,9 @@ def run(cfg, state, as_of=None):
         if f.get("onset") is None:
             f["onset"] = None
     delta = ledger.update(state, findings, as_of)
+    ready = readiness.assess(cfg, facts, ledger.load(state).values(), read_json(state / "dictionary.json", {}), formula_cells)
     snap = {"date": as_of.isoformat(), "codes": codes, "headers": hdrs, "notes": notes, "links": links,
-            "audits": audits, "dictionary_version": read_json(state / "dictionary.json", {}).get("version")}
+            "audits": audits, "readiness": ready, "dictionary_version": read_json(state / "dictionary.json", {}).get("version")}
     safeio.save_state(state / "snapshots" / f"{as_of.isoformat()}.json", json.dumps(snap, indent=2, default=str))
     with (state / "runs.jsonl").open("a", encoding="utf-8") as f:
         f.write(json.dumps({"as_of": as_of.isoformat(), "at": datetime.now().isoformat(timespec="seconds"),
@@ -283,7 +286,7 @@ def run(cfg, state, as_of=None):
                             "cleared": len(delta["cleared"]), "active": len(delta["active"])}) + "\n")
     return {"as_of": as_of, "latest_data": latest, "new": [e["id"] for e in delta["new"]],
             "changed": [e["id"] for e in delta["changed"]], "cleared": [e["id"] for e in delta["cleared"]],
-            "active": len(delta["active"]), "audits": audits}
+            "active": len(delta["active"]), "audits": audits, "readiness": ready}
 
 
 def export(state, path, sources=()):

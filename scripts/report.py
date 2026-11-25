@@ -12,6 +12,7 @@ from pathlib import Path
 import detect
 import ledger
 import pdfmini
+import readiness
 import sources as S
 import safeio
 import xlsx_audit as xa
@@ -113,7 +114,9 @@ def model(cfg, state):
     dictionary = (json.loads((Path(state) / "dictionary.json").read_text(encoding="utf-8"))
                   if (Path(state) / "dictionary.json").exists() else {}).get("metrics", {})
     snap = sorted((Path(state) / "snapshots").glob("*.json"))
-    audits = json.loads(snap[-1].read_text(encoding="utf-8")).get("audits", []) if snap else []
+    last = json.loads(snap[-1].read_text(encoding="utf-8")) if snap else {}
+    audits, ready = last.get("audits", []), last.get("readiness")
+    before = (json.loads(snap[-2].read_text(encoding="utf-8")).get("readiness") or {}).get("score") if len(snap) > 1 else None
 
     # Value stream summary: streams with a source or a finding.
     source_stages = set()
@@ -184,7 +187,7 @@ def model(cfg, state):
     return {"plant": cfg.get("plant", ""), "as_of": as_of, "previous": prev, "since": since, "entries": entries,
             "formula_defs": formula_defs, "excel_groups": groups,
             "rows": ranked, "use_cases": use_cases, "excel": excel, "audits": audits, "dictionary": dictionary,
-            "questions": questions, "sources": cfg["sources"]}
+            "questions": questions, "sources": cfg["sources"], "ready": ready, "ready_before": before}
 
 
 def stage_name(key):
@@ -203,7 +206,6 @@ body{margin:0;background:var(--mist);color:var(--navy);font:16px/1.55 "Report Te
 .eyebrow{font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);font-weight:600;margin:0}
 .top{background:var(--navy);color:var(--mist);padding:28px 0 44px}.top .eyebrow{color:#3CCFBF}.top h1{font-size:clamp(34px,5vw,56px);margin:10px 0 14px}
 .top p{color:#C9D2DC;margin:0;max-width:720px}.brand{display:flex;align-items:center;gap:12px;font:800 20px "Report Display",sans-serif;margin-bottom:44px}
-.brand i{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;background:#000;border:1px solid #22344D;color:#fff;font-style:normal}
 .brand span{margin-left:auto;font:600 14px "Report Text",sans-serif;color:#9FB0C2}
 h2{font-size:30px;margin:56px 0 10px}h3{font-size:21px;margin:30px 0 8px}p{margin:8px 0}.muted{color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0}.card>b{font-size:17px}
@@ -216,6 +218,11 @@ th{color:var(--teal);font-weight:600;white-space:nowrap;border-bottom:2px solid 
 tr:last-child td{border-bottom:0}code{font:13.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}td:first-child code{display:block;min-width:150px}
 .pill{display:inline-block;font-size:13px;padding:1px 10px;border-radius:99px;border:1px solid var(--line);color:var(--text2);white-space:nowrap}
 .sev1,.sev2{color:var(--bad);border-color:var(--bad)}.sev3,.sev4{color:var(--warn);border-color:var(--warn)}.new{color:var(--teal);border-color:var(--teal)}
+.ready{display:flex;gap:32px;align-items:center;background:var(--navy);color:var(--mist);border-radius:14px;padding:28px 32px;margin:16px 0;flex-wrap:wrap}
+.ready h3{margin:0;font-size:28px}.ready>div:last-child{flex:1;min-width:240px}.score{text-align:center}.score b{display:block;font:800 88px/1 "Report Display",sans-serif;color:var(--amber)}.score span{color:#C9D2DC}
+.check{display:grid;grid-template-columns:1fr 1fr;gap:8px 32px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 24px;margin:10px 0}.check p{margin:2px 0}
+.bar{height:10px;border-radius:99px;background:#EAEAEA;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--teal)}
+@media(max-width:640px){.check{grid-template-columns:1fr}}
 .uc{border-left:6px solid var(--teal)}.uc h3{margin:6px 0 4px;font-size:24px}.ask{border-left:4px solid var(--amber);padding-left:12px;margin:12px 0 0}
 ol,ul{padding-left:22px;margin:8px 0}li{margin:4px 0}.end{background:var(--navy);color:var(--mist);margin-top:72px;padding:48px 0}.end h2{margin:0 0 12px}
 .end a{color:#3CCFBF}.end .btn{display:inline-block;background:var(--amber);color:var(--navy);font-weight:600;border-radius:8px;padding:14px 26px;text-decoration:none;margin:14px 0}
@@ -234,6 +241,30 @@ def font_css():
     return "".join(out)
 
 
+MARK_FILE = Path(__file__).resolve().parent.parent / "assets" / "humagined-mark.jpg"
+MARK = "data:image/jpeg;base64," + base64.b64encode(MARK_FILE.read_bytes()).decode()
+
+
+def ready_lines(m):
+    """What both reports say about readiness: (headline, advice, note, rows). None when there's nothing to show."""
+    r = m.get("ready")
+    if not r:
+        return None
+    rows = []
+    for c in r["checks"]:
+        title, why, _ = readiness.CHECKS[c["key"]]
+        result = "Not measured: the files read don't show it." if c["share"] is None else f"{c['good']:,} of {c['total']:,} {c['unit']}."
+        rows.append((title, why, result, None if c["share"] is None else int(100 * c["share"])))
+    note = f"Scored on {r['measured']} of {len(r['checks'])} checks, with equal weight, from the files read for this report."
+    if r.get("held_back"):
+        note += " A check under half holds the score below 65, because an agent relies on them together."
+    if m.get("ready_before") is not None and r["score"] is not None and m["ready_before"] != r["score"]:
+        note += f" Last run: {m['ready_before']}."
+    note += " It isn't a promise about an agent, or about files that weren't read. Data teams call this knowledge graph readiness."
+    head = r["band"] if r["score"] is not None else f"Not scored yet: {r['measured']} checks could be measured, and a score needs {readiness.MIN_CHECKS}."
+    return head, r["advice"], note, rows
+
+
 def counts(m):
     c = Counter("formula" if x["category"] == "excel" else "mismatch" if x["kind"] in DEFN_KINDS else "other" for x in m["entries"])
     return [(c["mismatch"], "definition and report mismatches"), (len(m["excel_groups"]), "spreadsheet problems"),
@@ -250,11 +281,24 @@ def render_html(m):
     a = H.append
     a(f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
       f"<title>Metric Mismatch Report: {e(m['plant'])}</title><style>{font_css()}{CSS}</style></head><body>")
-    a(f"<header class='top'><div class='in'><div class='brand'><i>H</i>Humagined<span>Plant Watch</span></div>"
+    a(f"<header class='top'><div class='in'><div class='brand'><img src='{MARK}' alt='Humagined' width='77' height='73'><span>Plant Watch</span></div>"
       f"<p class='eyebrow'>Metric Mismatch Report</p><h1>{e(m['plant'])}</h1>"
       f"<p>Data through {e(long_date(m['as_of']))}. {len(m['sources'])} sources and {len(m['audits'])} workbooks checked. "
       "Findings are computed from the files listed here, not estimated.</p></div></header><main class='in'>")
     a("<div class='grid lift'>" + "".join(f"<div class='stat'><b>{n:,}</b><span>{e(t)}</span></div>" for n, t in counts(m)) + "</div>")
+    ready = ready_lines(m)
+    if ready:
+        head, advice, note, rows = ready
+        score = m["ready"]["score"]
+        a("<h2>Are you ready for AI agents?</h2><div class='ready'>"
+          + (f"<div class='score'><b>{score}</b><span>out of 100</span></div>" if score is not None else "")
+          + f"<div><h3>{e(head)}</h3>" + (f"<p>{e(advice)}</p>" if advice else "")
+          + (("<p><b>Do next:</b></p><ul>" + "".join(f"<li>{e(readiness.CHECKS[k][2])}</li>" for k in m["ready"]["next"]) + "</ul>")
+             if m["ready"]["next"] else "") + "</div></div>")
+        for title, why, result, pct in rows:
+            a(f"<div class='check'><div><b>{e(title)}</b><p class='muted'>{e(why)}</p></div><div><p>{e(result)}</p>"
+              + (f"<div class='bar' role='img' aria-label='{pct} percent'><i style='width:{pct}%'></i></div>" if pct is not None else "") + "</div></div>")
+        a(f"<p class='muted'>{e(note)}</p>")
     if m["previous"]:
         a(f"<div class='card'><b>Since the last run ({e(m['previous'])})</b>: {len(m['since']['new'])} new, "
           f"{len(m['since']['cleared'])} cleared.<ul>")
@@ -503,9 +547,7 @@ def render_pdf(m):
     d.page(first=True)
     p = d.p
     p.rect(0, 570, 612, 222, NAVY)
-    p.rect(LEFT, 733, 24, 24, "#000000", "#22344D")
-    p.text(LEFT + 7, 740, "H", 13, pdfmini.DISPLAY, color="#FFFFFF")
-    p.text(LEFT + 34, 740, "Humagined", 14, pdfmini.DISPLAY, color=MIST)
+    p.image(LEFT, 712, 60, 56.6)
     p.text(RIGHT, 740, "Plant Watch", 10, bold=True, right=True, color="#9FB0C2")
     p.text(LEFT, 686, "METRIC MISMATCH REPORT", 9.5, bold=True, color="#3CCFBF")
     y = 650
@@ -523,6 +565,32 @@ def render_pdf(m):
             p.text(x + 12, 545 - k * 11.5, ln, 9, color=TEXT2)
     d.y = 500
 
+    ready = ready_lines(m)
+    if ready:
+        head, advice, note, rows = ready
+        score = m["ready"]["score"]
+        d.h2("Are you ready for AI agents?")
+        nxt = [readiness.CHECKS[k][2] for k in m["ready"]["next"]]
+        x0 = LEFT + 20 + (120 if score is not None else 0)
+        lines = [(ln, 10, False, "#C9D2DC") for t in [advice] + nxt if t for ln in pdfmini.wrap(t, 10, False, RIGHT - x0 - 16)]
+        heads = pdfmini.wrap(head, 17, pdfmini.DISPLAY, RIGHT - x0 - 16)
+        h = max(92, 30 + 22 * len(heads) + 14.5 * len(lines))
+        d.room(h)
+        d.p.rect(LEFT, d.y - h, RIGHT - LEFT, h, NAVY)
+        if score is not None:
+            d.p.text(LEFT + 20, d.y - 58, str(score), 50, pdfmini.DISPLAY, color=AMBER)
+            d.p.text(LEFT + 22, d.y - 76, "out of 100", 9.5, color="#C9D2DC")
+        y = d.y - 30
+        for ln in heads:
+            d.p.text(x0, y, ln, 17, pdfmini.DISPLAY, color=MIST)
+            y -= 22
+        for ln, sz, b, c in lines:
+            d.p.text(x0, y + 4, ln, sz, bold=b, color=c)
+            y -= 14.5
+        d.y -= h + 10
+        d.table(["Check", "Why it matters", "What we found"], [[t, why, res + (f" ({pct}%)" if pct is not None else "")] for t, why, res, pct in rows],
+                [150, 190, 176])
+        d.text(note, 8.5, color=MUTED)
     if m["formula_defs"]:
         d.h2("Same name, different calculation")
         for x in m["formula_defs"]:

@@ -84,7 +84,9 @@ figure with page and quoted line, and asks what each one means once).
 ## 5. First run and the report
 
 Run `run`, then `report --pdf plant-watch/state/metric-mismatch-report.pdf`. Share
-both files. Then say, in a few lines: how many figures are calculated more than one way
+both files. Then say, in a few lines: the readiness for AI agents score from the run's `readiness` (the score, its band, the
+weakest check and the one thing to do next, in plain words; say "not scored" when it is null, and don't work out or adjust a
+score yourself), how many figures are calculated more than one way
 (and the one spanning the most workbooks), how many Excel errors and the worst one, the
 value stream with the most disagreement, and the first suggested use case with why.
 Offer: "Want me to check again every morning?" If yes, set up a scheduled task that
