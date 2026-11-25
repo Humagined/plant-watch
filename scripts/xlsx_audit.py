@@ -567,7 +567,7 @@ def audit(path, period_hint=None):
                     extra = form.replace(common.rstrip(), "") if form.startswith(common.rstrip()) else None
                     if extra and re.fullmatch(r"\s*[-+*/]\s*\d+(\.\d+)?\s*", extra):
                         add("hardcoded_constant", sheet, a1,
-                            f"Same formula as the column plus a typed {extra.strip()}: an adjustment nobody can see.",
+                            f"Same formula as the column plus a typed {extra.strip()}: an adjustment that's easy to miss.",
                             "Remove the constant, or put the adjustment in its own labeled cell and reference it.",
                             formula=cell["formula"], cached=cell["error"])
                     else:

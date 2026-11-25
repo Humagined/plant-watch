@@ -1,57 +1,115 @@
-"""A minimal PDF writer (text, lines, fills; Helvetica; US Letter). Standard library only.
+"""A minimal PDF writer (text, lines, fills, links; the report's own fonts; US Letter). Standard library only.
 
-Used for the printable report. Text is real text, so a reader can extract every figure.
+Text is real text in a WinAnsi-encoded font, so a reader can extract the figures.
 """
 
-_HELV = ("278 278 355 556 556 889 667 191 333 333 389 584 278 333 278 278 556 556 556 556 556 556 556 556 "
-         "556 556 278 278 584 584 584 556 1015 667 667 722 722 667 611 778 722 278 500 667 556 833 722 778 "
-         "667 778 722 667 611 722 667 944 667 667 611 278 278 278 469 556 333 556 556 500 556 556 278 556 "
-         "556 222 222 500 222 833 556 556 556 556 333 500 278 556 500 722 500 500 500 334 260 334 584")
-W = {chr(32 + i): int(v) for i, v in enumerate(_HELV.split())}
-# WinAnsi punctuation the reports use (Helvetica AFM widths)
-W.update({"›": 333, "‹": 333, "–": 556, "—": 1000, "‘": 222, "’": 222, "“": 333, "”": 333, "•": 350,
-          "…": 1000, "×": 584, "÷": 584, "°": 400, "€": 556})
+import json
+import zlib
+from pathlib import Path
+
+FONTS = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+METRICS = json.loads((FONTS / "metrics.json").read_text(encoding="utf-8"))
+REGULAR, BOLD, DISPLAY = "text-400", "text-600", "display-800"
+ORDER = (REGULAR, BOLD, DISPLAY)
+
+
+def winansi(text):
+    """What the fonts can show: keeps › – “ ” €, and an unknown character becomes ?."""
+    return str(text).encode("cp1252", "replace")
+
+
+def font_of(bold):
+    return bold if bold in ORDER else BOLD if bold else REGULAR
 
 
 def width(text, size, bold=False):
-    return sum(W.get(ch, 556) for ch in text) * size / 1000 * (1.06 if bold else 1)
+    w = METRICS[font_of(bold)]["widths"]
+    return sum(w[b - 32] if b >= 32 else 0 for b in winansi(text)) * size / 1000
 
 
 def esc(text):
-    t = str(text).encode("cp1252", "replace").decode("cp1252")  # WinAnsi, the fonts' encoding: keeps › – “ ” €
+    t = winansi(text).decode("cp1252", "ignore")
     return t.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def wrap(text, size, bold, limit):
+    """Lines that fit. A word longer than the line (a path, a formula) is broken."""
+    lines, cur = [], ""
+    for word in str(text).split():
+        trial = f"{cur} {word}" if cur else word
+        if width(trial, size, bold) <= limit:
+            cur = trial
+            continue
+        if cur:
+            lines.append(cur)
+        cur = word
+        while width(cur, size, bold) > limit and len(cur) > 1:
+            n = len(cur)
+            while n > 1 and width(cur[:n], size, bold) > limit:
+                n -= 1
+            lines.append(cur[:n])
+            cur = cur[n:]
+    return lines + [cur] if cur else lines
+
+
+def _rgb(color):
+    return " ".join(f"{int(color[i:i + 2], 16) / 255:.3f}" for i in (1, 3, 5))
 
 
 class Page:
     def __init__(self):
-        self.ops = []
+        self.ops, self.links = [], []
 
-    def text(self, x, y, s, size=10, bold=False, right=False, gray=0.0):
+    def text(self, x, y, s, size=10, bold=False, right=False, color="#0E1A2B"):
         if right:
             x -= width(s, size, bold)
-        self.ops.append(f"BT {gray:.2f} g /{'F2' if bold else 'F1'} {size} Tf {x:.1f} {y:.1f} Td ({esc(s)}) Tj ET")
+        f = ORDER.index(font_of(bold)) + 1
+        self.ops.append(f"BT {_rgb(color)} rg /F{f} {size} Tf {x:.1f} {y:.1f} Td ({esc(s)}) Tj ET")
 
-    def line(self, x1, y1, x2, y2, w=0.5, gray=0.75):
-        self.ops.append(f"{gray:.2f} G {w} w {x1:.1f} {y1:.1f} m {x2:.1f} {y2:.1f} l S")
+    def line(self, x1, y1, x2, y2, w=0.5, color="#DBDBDB"):
+        self.ops.append(f"{_rgb(color)} RG {w} w {x1:.1f} {y1:.1f} m {x2:.1f} {y2:.1f} l S")
 
-    def rect(self, x, y, w, h, gray=0.93):
-        self.ops.append(f"{gray:.2f} g {x:.1f} {y:.1f} {w:.1f} {h:.1f} re f")
+    def rect(self, x, y, w, h, color="#FFFFFF", border=None):
+        self.ops.append(f"{_rgb(color)} rg {x:.1f} {y:.1f} {w:.1f} {h:.1f} re f")
+        if border:
+            self.ops.append(f"{_rgb(border)} RG 0.6 w {x:.1f} {y:.1f} {w:.1f} {h:.1f} re S")
+
+    def link(self, x, y, w, h, url):
+        self.links.append((x, y, w, h, url))
 
 
 def pdf(pages):
-    objs = [None, None,
-            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
-            b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>"]
+    objs = [None, None]
+
+    def add(body):
+        objs.append(body if isinstance(body, bytes) else body.encode("cp1252"))
+        return len(objs)
+
+    def stream(data, extra=""):
+        z = zlib.compress(data, 9)
+        return f"<< /Length {len(z)} /Filter /FlateDecode {extra}>>\nstream\n".encode() + z + b"\nendstream"
+
+    fonts = []
+    for name in ORDER:
+        m, data = METRICS[name], (FONTS / f"{name}.ttf").read_bytes()
+        file = add(stream(data, f"/Length1 {len(data)} "))
+        desc = add(f"<< /Type /FontDescriptor /FontName /{m['name']} /Flags 32 /FontBBox [{' '.join(map(str, m['bbox']))}] "
+                   f"/ItalicAngle 0 /Ascent {m['ascent']} /Descent {m['descent']} /CapHeight {m['cap']} /StemV 90 "
+                   f"/FontFile2 {file} 0 R >>")
+        fonts.append(add(f"<< /Type /Font /Subtype /TrueType /BaseFont /{m['name']} /Encoding /WinAnsiEncoding "
+                         f"/FirstChar 32 /LastChar 255 /Widths [{' '.join(map(str, m['widths']))}] /FontDescriptor {desc} 0 R >>"))
+    res = " ".join(f"/F{i} {n} 0 R" for i, n in enumerate(fonts, 1))
     kids = []
     for pg in pages:
-        stream = "\n".join(pg.ops).encode("cp1252")
-        objs.append(b"<< /Length " + str(len(stream)).encode() + b" >>\nstream\n" + stream + b"\nendstream")
-        objs.append(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents {len(objs)} 0 R "
-                    f"/Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> >>".encode())
-        kids.append(len(objs))
+        content = add(stream("\n".join(pg.ops).encode("cp1252")))
+        annots = [add(f"<< /Type /Annot /Subtype /Link /Rect [{x:.1f} {y:.1f} {x + w:.1f} {y + h:.1f}] /Border [0 0 0] "
+                      f"/A << /S /URI /URI ({esc(u)}) >> >>") for x, y, w, h, u in pg.links]
+        extra = f" /Annots [{' '.join(f'{a} 0 R' for a in annots)}]" if annots else ""
+        kids.append(add(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents {content} 0 R "
+                        f"/Resources << /Font << {res} >> >>{extra} >>"))
     objs[0] = b"<< /Type /Catalog /Pages 2 0 R >>"
     objs[1] = f"<< /Type /Pages /Kids [{' '.join(f'{k} 0 R' for k in kids)}] /Count {len(kids)} >>".encode()
-    buf, offsets = bytearray(b"%PDF-1.4\n"), []
+    buf, offsets = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"), []
     for i, o in enumerate(objs, 1):
         offsets.append(len(buf))
         buf += f"{i} 0 obj\n".encode() + o + b"\nendobj\n"

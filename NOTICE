@@ -12,5 +12,8 @@ reproduce the content of this NOTICE file (Section 6).
 Plant Watch is built for Claude. It is not made, endorsed or supported
 by Anthropic. Claude is a trademark of Anthropic, PBC.
 
+The fonts in assets/fonts are subsets of Archivo and IBM Plex Sans, under
+the SIL Open Font License 1.1 (license files beside them).
+
 The synthetic shop data in demo/ (Northfork Precision) is fictional.
 Any resemblance to a real company is coincidental.

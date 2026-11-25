@@ -70,7 +70,7 @@ Or download the source and load it locally.
 
 ## Walk through your report
 
-Questions about what you found? [Book a free 30-minute working session](https://www.humagined.ai/book/bryce) to walk through your report with us. Available through January 31, 2027.
+Questions about what you found? [Book a free 30-minute working session](https://www.humagined.ai/book) to walk through your report with us. Available through January 31, 2027.
 
 ## Support
 

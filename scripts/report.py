@@ -1,6 +1,7 @@
 """The Metric Mismatch Report: HTML for reading, PDF for printing. Every number comes from the
 ledger, the dictionary and the snapshots; nothing here is typed by the model."""
 
+import base64
 import html
 import re
 import json
@@ -84,7 +85,7 @@ def excel_groups(entries):
     return sorted(out, key=lambda g: (g.get("severity", 9), -g["count"], g["workbook"], g.get("sheet") or "", g["cell"] or ""))
 
 
-BOOKING_URL = "https://www.humagined.ai/book/bryce"
+BOOKING_URL = "https://www.humagined.ai/book"
 BOOKING = ("Found mismatches? Book a free 30-minute working session to walk through them: "
            f"{BOOKING_URL} (through January 31, 2027).")
 LINK = f"<a href='{BOOKING_URL}'>{BOOKING_URL}</a>"
@@ -194,38 +195,66 @@ def stage_name(key):
 
 
 CSS = """
-:root{--bg:#f6f7f9;--fg:#16212e;--muted:#5b6b7c;--card:#ffffff;--line:#d9dfe6;--accent:#1f4f7a;--accent-soft:#e7eef6;
---bad:#a3342a;--warn:#9a6a10;--ok:#2f6b48;color-scheme:light}
-@media (prefers-color-scheme:dark){:root{--bg:#0f1620;--fg:#e6ecf2;--muted:#9fb0c1;--card:#16202c;--line:#2a3746;
---accent:#8cb8e0;--accent-soft:#1c2b3b;--bad:#e58b80;--warn:#e0b25c;--ok:#7fc39a;color-scheme:dark}}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 -apple-system,"Segoe UI",
-Roboto,Helvetica,Arial,sans-serif}main{max-width:1080px;margin:0 auto;padding:32px max(16px,env(safe-area-inset-left))}
-h1{font-size:28px;margin:0 0 4px;text-wrap:balance}h2{font-size:20px;margin:36px 0 10px;padding-top:12px;border-top:1px solid var(--line)}
-h3{font-size:16px;margin:22px 0 6px}.muted{color:var(--muted)}.eyebrow{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);font-weight:600}
-.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:10px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-.stat b{display:block;font-size:24px;font-variant-numeric:tabular-nums}.stat span{color:var(--muted);font-size:13px}
-.tw{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card);margin:8px 0}
-table{border-collapse:collapse;width:100%;font-size:13.5px}th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{background:var(--accent-soft);font-weight:600;white-space:nowrap}td.n{text-align:right;font-variant-numeric:tabular-nums}
-tr:last-child td{border-bottom:0}code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;word-break:break-all}
-.pill{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;border:1px solid var(--line);white-space:nowrap}
-.sev1{color:var(--bad);border-color:var(--bad)}.sev2{color:var(--bad)}.sev3,.sev4{color:var(--warn);border-color:var(--warn)}
-.sev5,.sev6{color:var(--muted)}.new{color:var(--accent);border-color:var(--accent)}.uc{border-left:4px solid var(--accent)}
-ol,ul{padding-left:20px}footer{margin-top:40px;color:var(--muted);font-size:13px}
-@media print{body{background:#fff;color:#000}.card,.tw,.stat{break-inside:avoid}}
+:root{--mist:#F6F6F6;--navy:#0E1A2B;--text2:#3A4A5E;--muted:#5C6A7B;--teal:#1B7169;--amber:#F2A541;--card:#fff;--line:#DBDBDB;
+--bad:#B3261E;--warn:#8A5A00;color-scheme:light}
+*{box-sizing:border-box}html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;background:var(--mist);color:var(--navy);font:16px/1.55 "Report Text",sans-serif}
+.in{max-width:1120px;margin:0 auto;padding:0 24px}h1,h2,h3{font-family:"Report Display",sans-serif;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0}
+.eyebrow{font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);font-weight:600;margin:0}
+.top{background:var(--navy);color:var(--mist);padding:28px 0 44px}.top .eyebrow{color:#3CCFBF}.top h1{font-size:clamp(34px,5vw,56px);margin:10px 0 14px}
+.top p{color:#C9D2DC;margin:0;max-width:720px}.brand{display:flex;align-items:center;gap:12px;font:800 20px "Report Display",sans-serif;margin-bottom:44px}
+.brand i{display:grid;place-items:center;width:36px;height:36px;border-radius:8px;background:#000;border:1px solid #22344D;color:#fff;font-style:normal}
+.brand span{margin-left:auto;font:600 14px "Report Text",sans-serif;color:#9FB0C2}
+h2{font-size:30px;margin:56px 0 10px}h3{font-size:21px;margin:30px 0 8px}p{margin:8px 0}.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0}.card>b{font-size:17px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:16px 0}.lift{margin-top:-28px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.stat b{display:block;font:800 36px/1 "Report Display",sans-serif;font-variant-numeric:tabular-nums;margin-bottom:8px}.stat span{color:var(--text2);font-size:15px}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card);margin:12px 0}
+table{border-collapse:collapse;width:100%;font-size:15px}th,td{text-align:left;padding:11px 14px;border-bottom:1px solid #E2E2E2;vertical-align:top}
+th{color:var(--teal);font-weight:600;white-space:nowrap;border-bottom:2px solid var(--navy)}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}code{font:13.5px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}td:first-child code{display:block;min-width:150px}
+.pill{display:inline-block;font-size:13px;padding:1px 10px;border-radius:99px;border:1px solid var(--line);color:var(--text2);white-space:nowrap}
+.sev1,.sev2{color:var(--bad);border-color:var(--bad)}.sev3,.sev4{color:var(--warn);border-color:var(--warn)}.new{color:var(--teal);border-color:var(--teal)}
+.uc{border-left:6px solid var(--teal)}.uc h3{margin:6px 0 4px;font-size:24px}.ask{border-left:4px solid var(--amber);padding-left:12px;margin:12px 0 0}
+ol,ul{padding-left:22px;margin:8px 0}li{margin:4px 0}.end{background:var(--navy);color:var(--mist);margin-top:72px;padding:48px 0}.end h2{margin:0 0 12px}
+.end a{color:#3CCFBF}.end .btn{display:inline-block;background:var(--amber);color:var(--navy);font-weight:600;border-radius:8px;padding:14px 26px;text-decoration:none;margin:14px 0}
+.end small{color:#9FB0C2;font-size:14px;display:block;margin-top:18px}
+@media print{.card,.stat,tr{break-inside:avoid}h2,h3{break-after:avoid}}
 """
+
+
+def font_css():
+    """The fonts, inside the file: a report loads nothing from a network."""
+    out = []
+    for family, weight, name in (("Report Text", 400, pdfmini.REGULAR), ("Report Text", 600, pdfmini.BOLD),
+                                 ("Report Display", 800, pdfmini.DISPLAY)):
+        data = base64.b64encode((pdfmini.FONTS / f"{name}.ttf").read_bytes()).decode()
+        out.append(f"@font-face{{font-family:'{family}';font-weight:{weight};src:url(data:font/ttf;base64,{data}) format('truetype')}}")
+    return "".join(out)
+
+
+def counts(m):
+    c = Counter("formula" if x["category"] == "excel" else "mismatch" if x["kind"] in DEFN_KINDS else "other" for x in m["entries"])
+    return [(c["mismatch"], "definition and report mismatches"), (len(m["excel_groups"]), "spreadsheet problems"),
+            (c["other"], "record, report and anomaly findings"), (len(m["questions"]), "questions to settle")]
+
+
+def long_date(iso):
+    d = date.fromisoformat(str(iso)[:10])
+    return f"{d:%B} {d.day}, {d.year}"
 
 
 def render_html(m):
     H = []
     a = H.append
     a(f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
-      f"<title>Metric Mismatch Report: {e(m['plant'])}</title><style>{CSS}</style></head><body><main>")
-    a(f"<div class='eyebrow'>Metric Mismatch Report</div><h1>{e(m['plant'])}</h1>")
-    a(f"<p class='muted'>Data through {e(m['as_of'])}. {len(m['sources'])} sources and {len(m['audits'])} workbooks checked."
-      f" Findings are computed from the files listed here, not estimated.</p>")
+      f"<title>Metric Mismatch Report: {e(m['plant'])}</title><style>{font_css()}{CSS}</style></head><body>")
+    a(f"<header class='top'><div class='in'><div class='brand'><i>H</i>Humagined<span>Plant Watch</span></div>"
+      f"<p class='eyebrow'>Metric Mismatch Report</p><h1>{e(m['plant'])}</h1>"
+      f"<p>Data through {e(long_date(m['as_of']))}. {len(m['sources'])} sources and {len(m['audits'])} workbooks checked. "
+      "Findings are computed from the files listed here, not estimated.</p></div></header><main class='in'>")
+    a("<div class='grid lift'>" + "".join(f"<div class='stat'><b>{n:,}</b><span>{e(t)}</span></div>" for n, t in counts(m)) + "</div>")
     if m["previous"]:
         a(f"<div class='card'><b>Since the last run ({e(m['previous'])})</b>: {len(m['since']['new'])} new, "
           f"{len(m['since']['cleared'])} cleared.<ul>")
@@ -252,43 +281,10 @@ def render_html(m):
                 yours = " <span class='pill'>your definition</span>" if v.get("is_yours") else ""
                 a(f"<tr><td><code>{e(v['definition'])}</code>{yours}</td>"
                   f"<td class='n'>{v['places']}</td><td class='n'>{v['workbooks']}</td><td><code>{e(v['example'])}</code></td></tr>")
-            a("</table></div>" + (f"<p><b>To settle:</b> {e(x['question'])}</p>" if x.get("question") else "") + "</div>")
-
-    # 1. Excel errors at a glance
-    G = m["excel_groups"]
-    a("<h2>Excel errors at a glance</h2>")
-    a(f"<p class='muted'>{len(G):,} problem(s) across {sum(g['count'] for g in G):,} cell(s). A formula filled down a column "
-      "with the same fault is counted once.</p>")
-    a("<div class='grid'>")
-    for name, kinds in EXCEL_GROUPS:
-        gs = [g for g in G if g["kind"] in kinds]
-        cells = sum(g["count"] for g in gs)
-        a(f"<div class='stat'><b>{len(gs):,}</b><span>{e(name)}" + (f" ({cells:,} cells)" if cells != len(gs) else "") + "</span></div>")
-    a("</div>")
-    worst, per_kind = [], Counter()
-    for g in G:
-        if per_kind[g["kind"]] < 2 and len(worst) < 5:   # a spread of problems, not five of the same
-            worst.append(g)
-            per_kind[g["kind"]] += 1
-    if worst:
-        a("<h3>Worst five</h3><div class='tw'><table><tr><th>Where</th><th>Problem</th><th>Fix</th></tr>")
-        for g in worst:
-            a(f"<tr><td><code>{e(g['label'])}</code></td><td>{e(g['problem'])}</td><td>{e(g['fix'])}</td></tr>")
-        a("</table></div>")
-
-    # 2. Value stream summary
-    a("<h2>Value stream summary</h2><div class='tw'><table><tr><th>Value stream</th><th>Metrics checked</th>"
-      "<th>Contested definitions</th><th class='n'>Mismatches</th><th class='n'>Spreadsheet faults</th>"
-      "<th class='n'>Key and record problems</th><th class='n'>Anomalies</th><th>KPIs affected</th></tr>")
-    for r in m["rows"]:
-        a(f"<tr><td><b>{e(r['stream']['title'])}</b></td><td>{e(', '.join(detect.METRICS.get(x, {}).get('label', x) for x in r['metrics'])) or '-'}</td>"
-          f"<td>{e(', '.join(detect.METRICS.get(x, {}).get('label', x) for x in r['contested'])) or '-'}</td>"
-          f"<td class='n'>{r['mismatches']}</td><td class='n'>{r['excel']}</td><td class='n'>{r['keys']}</td>"
-          f"<td class='n'>{r['anomalies']}</td><td>{e(', '.join(r['kpis'])) or '-'}</td></tr>")
-    a("</table></div>")
+            a("</table></div>" + (f"<p class='ask'><b>To settle:</b> {e(x['question'])}</p>" if x.get("question") else "") + "</div>")
 
     # 3. Suggested first use cases
-    a("<h2>Suggested first use cases</h2><p class='muted'>Ranked by contested definitions on headline KPIs, then the size of "
+    a("<h2>Where to start</h2><p class='muted'>Ranked by contested definitions on headline KPIs, then the size of "
       "the gaps, then spreadsheet faults feeding those numbers, then other problems.</p>")
     for i, uc in enumerate(m["use_cases"], 1):
         a(f"<div class='card uc'><div class='eyebrow'>{i}. {e(uc['stream'])}</div><h3>{e(uc['title'])}</h3>"
@@ -299,7 +295,7 @@ def render_html(m):
           + (f"<p class='muted'>Sources involved: {e(', '.join(uc['sources']))}</p>" if uc["sources"] else "") + "</div>")
 
     # 4. By stream › stage › metric
-    a("<h2>By value stream, stage and metric</h2>")
+    a("<h2>Mismatches by value stream</h2>")
     for r in m["rows"]:
         fs = [x for x in r["findings"] if x["category"] != "excel" and x["kind"] != "formula_definition_conflict"]
         if not fs:
@@ -330,8 +326,41 @@ def render_html(m):
                         a("<tr>" + "".join(f"<td>{e(g.get(k))}</td>" for k in keys) + "</tr>")
                     a("</table></div>")
                 if x.get("question"):
-                    a(f"<p><b>To settle:</b> {e(x['question'])}</p>")
+                    a(f"<p class='ask'><b>To settle:</b> {e(x['question'])}</p>")
                 a("</div>")
+
+    # 2. Value stream summary
+    a("<h2>Value stream summary</h2><div class='tw'><table><tr><th>Value stream</th><th>Metrics checked</th>"
+      "<th>Contested definitions</th><th class='n'>Mismatches</th><th class='n'>Spreadsheet faults</th>"
+      "<th class='n'>Key and record problems</th><th class='n'>Anomalies</th><th>KPIs affected</th></tr>")
+    for r in m["rows"]:
+        a(f"<tr><td><b>{e(r['stream']['title'])}</b></td><td>{e(', '.join(detect.METRICS.get(x, {}).get('label', x) for x in r['metrics'])) or '-'}</td>"
+          f"<td>{e(', '.join(detect.METRICS.get(x, {}).get('label', x) for x in r['contested'])) or '-'}</td>"
+          f"<td class='n'>{r['mismatches']}</td><td class='n'>{r['excel']}</td><td class='n'>{r['keys']}</td>"
+          f"<td class='n'>{r['anomalies']}</td><td>{e(', '.join(r['kpis'])) or '-'}</td></tr>")
+    a("</table></div>")
+
+    # 1. Excel errors at a glance
+    G = m["excel_groups"]
+    a("<h2>Excel errors at a glance</h2>")
+    a(f"<p class='muted'>{len(G):,} problem(s) across {sum(g['count'] for g in G):,} cell(s). A formula filled down a column "
+      "with the same fault is counted once.</p>")
+    a("<div class='grid'>")
+    for name, kinds in EXCEL_GROUPS:
+        gs = [g for g in G if g["kind"] in kinds]
+        cells = sum(g["count"] for g in gs)
+        a(f"<div class='stat'><b>{len(gs):,}</b><span>{e(name)}" + (f" ({cells:,} cells)" if cells != len(gs) else "") + "</span></div>")
+    a("</div>")
+    worst, per_kind = [], Counter()
+    for g in G:
+        if per_kind[g["kind"]] < 2 and len(worst) < 5:   # a spread of problems, not five of the same
+            worst.append(g)
+            per_kind[g["kind"]] += 1
+    if worst:
+        a("<h3>Fix these first</h3><div class='tw'><table><tr><th>Where</th><th>Problem</th><th>Fix</th></tr>")
+        for g in worst:
+            a(f"<tr><td><code>{e(g['label'])}</code></td><td>{e(g['problem'])}</td><td>{e(g['fix'])}</td></tr>")
+        a("</table></div>")
 
     # 5. Excel audit, complete
     a("<h2>Excel audit, by workbook</h2>")
@@ -368,112 +397,194 @@ def render_html(m):
         for q in m["questions"]:
             a(f"<li>{e(q['question'])} <span class='muted'>({e(stage_name(q['stage']))})</span></li>")
         a("</ol>")
-    a("<footer>Generated by Plant Watch from the plant's own files. Plant Watch doesn't send your files or results."
-      f"<p>{e(BOOKING).replace(BOOKING_URL, LINK)}</p></footer></main></body></html>")
+    a(f"</main><section class='end'><div class='in'><h2>Let's walk through them.</h2><p>{e(BOOKING).replace(BOOKING_URL, LINK)}</p>"
+      f"<a class='btn' href='{BOOKING_URL}'>Book a Call &rarr;</a>"
+      "<small>Generated by Plant Watch from the plant's own files. Plant Watch doesn't send your files or results. "
+      "Check findings before you act on them.</small></div></section></body></html>")
     return "".join(H)
 
 
+NAVY, TEAL, AMBER, MIST, MUTED, TEXT2, LINE = "#0E1A2B", "#1B7169", "#F2A541", "#F6F6F6", "#5C6A7B", "#3A4A5E", "#DBDBDB"
+LEFT, RIGHT, FLOOR = 48, 564, 62
+
+
+class Doc:
+    """A page cursor: each piece moves down and starts a new page when it won't fit."""
+
+    def __init__(self, m):
+        self.m, self.pages, self.y = m, [], 0
+
+    def page(self, first=False):
+        self.p = pdfmini.Page()
+        self.pages.append(self.p)
+        self.p.rect(0, 0, 612, 792, MIST)
+        if not first:
+            self.p.text(LEFT, 756, "Metric Mismatch Report", 8.5, bold=True, color=TEAL)
+            self.p.text(RIGHT, 756, f"{self.m['plant']}, data through {long_date(self.m['as_of'])}", 8.5, right=True, color=MUTED)
+            self.p.line(LEFT, 748, RIGHT, 748)
+            self.y = 726
+
+    def room(self, h):
+        if self.y - h < FLOOR:
+            self.page()
+
+    def gap(self, n):
+        self.y -= n
+
+    def text(self, t, size=10, bold=False, color=TEXT2, x=LEFT, limit=None, lead=1.4):
+        for ln in pdfmini.wrap(t, size, bold, (limit or RIGHT) - x):
+            self.room(size)
+            self.p.text(x, self.y - size, ln, size, bold=bold, color=color)
+            self.y -= size * lead
+
+    def h2(self, t):
+        self.room(90)
+        self.gap(16)
+        self.text(t, 18, pdfmini.DISPLAY, NAVY, lead=1.25)
+        self.gap(6)
+
+    def block(self, parts, bar=None):
+        """A card: parts are (text, size, bold, color). Kept whole when it fits on a page."""
+        inner = RIGHT - LEFT - 32
+        lines = [(ln, sz, b, c) for t, sz, b, c in parts for ln in pdfmini.wrap(t, sz, b, inner)]
+        while lines:
+            h = sum(sz * 1.4 for _, sz, _, _ in lines) + 24
+            if self.y - h < FLOOR and h < 600:
+                self.page()
+            fit, used = [], 24
+            for ln in lines:
+                if used + ln[1] * 1.4 > self.y - FLOOR and fit:
+                    break
+                fit.append(ln)
+                used += ln[1] * 1.4
+            self.p.rect(LEFT, self.y - used, RIGHT - LEFT, used, "#FFFFFF", LINE)
+            if bar:
+                self.p.rect(LEFT, self.y - used, 4, used, bar)
+            y = self.y - 12
+            for ln, sz, b, c in fit:
+                self.p.text(LEFT + 18, y - sz, ln, sz, bold=b, color=c)
+                y -= sz * 1.4
+            self.y -= used + 8
+            lines = lines[len(fit):]
+            if lines:
+                self.page()
+
+    def table(self, heads, rows, widths):
+        xs, x = [], LEFT
+        for w in widths:
+            xs.append(x)
+            x += w
+
+        def head():
+            for hx, t in zip(xs, heads):
+                self.p.text(hx + 6, self.y - 11, t, 9, bold=True, color=TEAL)
+            self.p.line(LEFT, self.y - 17, RIGHT, self.y - 17, 1.2, NAVY)
+            self.y -= 19
+
+        self.room(70)
+        head()
+        for row in rows:
+            cells = [pdfmini.wrap(t, 8.5, i == 0, w - 12) for i, (t, w) in enumerate(zip(row, widths))]
+            h = max(len(c) for c in cells) * 11.5 + 9
+            if self.y - h < FLOOR and h < 600:
+                self.page()
+                head()
+            self.p.rect(LEFT, self.y - h, RIGHT - LEFT, h, "#FFFFFF")
+            for i, (cx, c) in enumerate(zip(xs, cells)):
+                for k, ln in enumerate(c):
+                    self.p.text(cx + 6, self.y - 13 - k * 11.5, ln, 8.5, bold=i == 0, color=NAVY if i == 0 else TEXT2)
+            self.p.line(LEFT, self.y - h, RIGHT, self.y - h)
+            self.y -= h
+        self.gap(10)
+
+
 def render_pdf(m):
-    pages, p, y = [], None, 0
+    d = Doc(m)
+    d.page(first=True)
+    p = d.p
+    p.rect(0, 570, 612, 222, NAVY)
+    p.rect(LEFT, 733, 24, 24, "#000000", "#22344D")
+    p.text(LEFT + 7, 740, "H", 13, pdfmini.DISPLAY, color="#FFFFFF")
+    p.text(LEFT + 34, 740, "Humagined", 14, pdfmini.DISPLAY, color=MIST)
+    p.text(RIGHT, 740, "Plant Watch", 10, bold=True, right=True, color="#9FB0C2")
+    p.text(LEFT, 686, "METRIC MISMATCH REPORT", 9.5, bold=True, color="#3CCFBF")
+    y = 650
+    for ln in pdfmini.wrap(m["plant"], 32, pdfmini.DISPLAY, RIGHT - LEFT)[:2]:
+        p.text(LEFT, y, ln, 32, pdfmini.DISPLAY, color=MIST)
+        y -= 34
+    p.text(LEFT, y + 4, f"Data through {long_date(m['as_of'])}. {len(m['sources'])} sources and {len(m['audits'])} workbooks checked.",
+           10.5, color="#C9D2DC")
+    w = (RIGHT - LEFT - 30) / 4
+    for i, (n, t) in enumerate(counts(m)):
+        x = LEFT + i * (w + 10)
+        p.rect(x, 512, w, 84, "#FFFFFF", LINE)
+        p.text(x + 12, 562, f"{n:,}", 25, pdfmini.DISPLAY)
+        for k, ln in enumerate(pdfmini.wrap(t, 9, False, w - 20)):
+            p.text(x + 12, 545 - k * 11.5, ln, 9, color=TEXT2)
+    d.y = 500
 
-    def newpage():
-        nonlocal p, y
-        p = pdfmini.Page()
-        pages.append(p)
-        p.text(54, 756, f"Metric Mismatch Report: {m['plant']} (data through {m['as_of']})", 8, gray=0.45)
-        y = 730
-
-    def line(text, size=9.5, bold=False, gray=0.0, indent=0):
-        nonlocal y
-        words, cur = str(text).split(), ""
-        for w in words:
-            if pdfmini.width(cur + " " + w, size, bold) > 500 - indent:
-                if y < 60:
-                    newpage()
-                p.text(54 + indent, y, cur.strip(), size, bold=bold, gray=gray)
-                y -= size + 4
-                cur = ""
-            cur += " " + w
-        if cur.strip():
-            if y < 60:
-                newpage()
-            p.text(54 + indent, y, cur.strip(), size, bold=bold, gray=gray)
-            y -= size + 4
-
-    def gap(n=6):
-        nonlocal y
-        y -= n
-
-    newpage()
-    line("Metric Mismatch Report", 18, bold=True)
-    line(m["plant"], 12)
-    line(f"Data through {m['as_of']}. {len(m['sources'])} sources and {len(m['audits'])} workbooks checked.", 9, gray=0.35)
-    gap(10)
     if m["formula_defs"]:
-        line("Same name, different calculation", 13, bold=True)
+        d.h2("Same name, different calculation")
         for x in m["formula_defs"]:
-            line(x["title"], 10, bold=True)
-            for v in (x.get("evidence") or {}).get("variants", []):
-                line(f"= {v['definition']}   ({v['places']} places, {v['workbooks']} workbooks; e.g. {v['example']})"
-                     + ("  [your definition]" if v.get("is_yours") else ""), 8.5, indent=10)
-            if x.get("question"):
-                line(f"To settle: {x['question']}", 8.5, gray=0.3, indent=10)
-            gap(3)
-        gap(8)
-    line("Excel errors at a glance", 13, bold=True)
-    G = m["excel_groups"]
-    line(f"{len(G):,} problem(s) across {sum(g['count'] for g in G):,} cell(s).", 9.5)
-    line("   ".join(f"{name}: {sum(1 for g in G if g['kind'] in kinds)}" for name, kinds in EXCEL_GROUPS), 9.5)
-    gap(10)
-    line("Value stream summary", 13, bold=True)
-    for r in m["rows"]:
-        line(f"{r['stream']['title']}: {r['mismatches']} mismatches, {r['excel']} spreadsheet faults, {r['keys']} key/record "
-             f"problems, {r['anomalies']} anomalies. Contested: {', '.join(r['contested']) or 'none'}.", 9.5)
-    gap(10)
-    line("Suggested first use cases", 13, bold=True)
-    for i, uc in enumerate(m["use_cases"], 1):
-        line(f"{i}. {uc['title']} ({uc['stream']})", 11, bold=True)
-        line(uc["outcome"], 9.5)
-        for w in uc["why"]:
-            line(f"- {w}", 9.5, indent=10)
-        gap(4)
-    gap(8)
-    line("Findings by value stream and stage", 13, bold=True)
-    for r in m["rows"]:
-        fs = [x for x in r["findings"] if x["category"] != "excel" and x["kind"] != "formula_definition_conflict"]
-        if fs:
-            line(r["stream"]["title"], 11, bold=True)
+            d.block([(x["title"], 11, True, NAVY)]
+                    + [(f"= {v['definition']}   ({v['places']} places, {v['workbooks']} workbooks; e.g. {v['example']})"
+                        + ("  [your definition]" if v.get("is_yours") else ""), 9, False, TEXT2)
+                       for v in (x.get("evidence") or {}).get("variants", [])]
+                    + ([(f"To settle: {x['question']}", 9.5, True, TEAL)] if x.get("question") else []))
+    if m["use_cases"]:
+        d.h2("Where to start")
+        for i, uc in enumerate(m["use_cases"], 1):
+            d.block([(f"{i}. {uc['stream']}", 9, True, TEAL), (uc["title"], 14, pdfmini.DISPLAY, NAVY), (uc["outcome"], 10, False, TEXT2)]
+                    + [(f"•  {why}", 9.5, False, TEXT2) for why in uc["why"]], bar=TEAL)
+    shown = [(r, [x for x in r["findings"] if x["category"] != "excel" and x["kind"] != "formula_definition_conflict"]) for r in m["rows"]]
+    if any(fs for _, fs in shown):
+        d.h2("Mismatches by value stream")
+        for r, fs in shown:
             for x in fs:
-                line(f"{stage_name(x.get('stage'))}: {x['title']}", 9.5, bold=True, indent=6)
-                line(x["detail"], 9, indent=6)
-                if x.get("question"):
-                    line(f"To settle: {x['question']}", 9, gray=0.3, indent=6)
-                gap(3)
-    gap(8)
-    line("Excel audit, by workbook", 13, bold=True)
+                d.block([(stage_name(x.get("stage")), 9, True, TEAL), (x["title"], 11, True, NAVY), (x["detail"], 9.5, False, TEXT2)]
+                        + ([(f"To settle: {x['question']}", 9.5, True, NAVY)] if x.get("question") else []),
+                        bar=AMBER if x["kind"] in DEFN_KINDS else None)
+    if m["rows"]:
+        d.h2("Value stream summary")
+        d.table(["Value stream", "Contested", "Mismatches", "Spreadsheet", "Records", "Anomalies"],
+                [[r["stream"]["title"], ", ".join(detect.METRICS.get(x, {}).get("label", x) for x in r["contested"]) or "-",
+                  str(r["mismatches"]), str(r["excel"]), str(r["keys"]), str(r["anomalies"])] for r in m["rows"]],
+                [156, 112, 66, 66, 56, 60])
+    G = m["excel_groups"]
+    d.h2("Excel errors at a glance")
+    d.text(f"{len(G):,} problem(s) across {sum(g['count'] for g in G):,} cell(s). " +
+           "  ".join(f"{name}: {sum(1 for g in G if g['kind'] in kinds)}." for name, kinds in EXCEL_GROUPS))
     for au in m["audits"]:
         gs = [g for g in G if g["workbook"] == au["workbook"]]
-        line(f"{au['workbook']} ({len(gs):,} problems, {sum(g['count'] for g in gs):,} cells)", 11, bold=True)
+        d.h2(f"Excel audit: {au['workbook']}")
+        d.text(f"{len(gs):,} problems, {sum(g['count'] for g in gs):,} cells.")
         if au.get("copies"):
-            line(f"Checked at {au.get('path') or au['workbook']}. The same workbook is also at {'; '.join(au['copies'])} "
-                 f"(same sheets and formulas), so it wasn't checked twice.", 8.5, gray=0.35, indent=6)
-        for g in gs[:EXCEL_ROWS_PER_WORKBOOK]:
-            line(f"{g.get('sheet') or 'workbook'}!{g['where']}  {g.get('formula') or ''}", 8.5, bold=True, indent=6)
-            line(f"{g['problem']} Fix: {g['fix']}", 8.5, indent=6)
+            d.text(f"Checked at {au.get('path') or au['workbook']}. The same workbook is also at {'; '.join(au['copies'])} "
+                   "(same sheets and formulas), so it wasn't checked twice.", 9, color=MUTED)
+        d.gap(6)
+        if gs:
+            d.table(["Cell", "Formula", "Problem", "Fix"],
+                    [[f"{g.get('sheet') or 'workbook'}!{g['where']}", g.get("formula") or "", g["problem"], g["fix"]]
+                     for g in gs[:EXCEL_ROWS_PER_WORKBOOK]], [92, 118, 172, 134])
         if len(gs) > EXCEL_ROWS_PER_WORKBOOK:
-            line(f"And {len(gs) - EXCEL_ROWS_PER_WORKBOOK:,} more problem(s); export the findings for the rest.",
-                 8.5, gray=0.35, indent=6)
+            d.text(f"And {len(gs) - EXCEL_ROWS_PER_WORKBOOK:,} more problem(s); export the findings for the rest.", 9, color=MUTED)
     if m["questions"]:
-        gap(8)
-        line("Questions to settle", 13, bold=True)
+        d.h2("Questions to settle")
         for i, q in enumerate(m["questions"], 1):
-            line(f"{i}. {q['question']}", 9.5)
-    gap(10)
-    line(BOOKING, 9.5)
-    total = len(pages)
-    for i, pg in enumerate(pages, 1):
-        pg.text(558, 30, f"Page {i} of {total}", 8, gray=0.45, right=True)
-    return pdfmini.pdf(pages)
+            d.text(f"{i}. {q['question']}", 10)
+            d.gap(3)
+    d.gap(14)
+    lines = pdfmini.wrap(BOOKING, 11, True, RIGHT - LEFT - 40)
+    h = len(lines) * 16 + 32
+    d.room(h)
+    d.p.rect(LEFT, d.y - h, RIGHT - LEFT, h, NAVY)
+    for k, ln in enumerate(lines):
+        d.p.text(LEFT + 20, d.y - 27 - k * 16, ln, 11, bold=True, color=MIST)
+    d.p.link(LEFT, d.y - h, RIGHT - LEFT, h, BOOKING_URL)
+    for i, pg in enumerate(d.pages, 1):
+        pg.text(LEFT, 32, "Humagined", 9, pdfmini.DISPLAY)
+        pg.text(RIGHT, 32, f"Page {i} of {len(d.pages)}", 8.5, right=True, color=MUTED)
+    return pdfmini.pdf(d.pages)
 
 
 def render(cfg, state, out_path, pdf_path=None):

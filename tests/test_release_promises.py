@@ -67,7 +67,7 @@ def test_a_full_run_on_the_demo_changes_no_source_and_ends_with_the_booking_line
     assert r["count"] == 39 and r["definitions"] == 3 and r["problems"] == []
     assert "tesserex" not in json.dumps(r).lower()
     line = ("Found mismatches? Book a free 30-minute working session to walk through them: "
-            "https://www.humagined.ai/book/bryce (through January 31, 2027).")
+            "https://www.humagined.ai/book (through January 31, 2027).")
     import re
     assert line in re.sub(r"<[^>]+>", "", (out / "r.html").read_text(encoding="utf-8"))
     pages = pdftext.pages(out / "r.pdf")

@@ -38,8 +38,8 @@ import xlsx_audit as xa
 
 
 def day(d):
-    """9 Nov. Written out because the no-padding date code isn't portable."""
-    return f"{d.day} {d:%b}"
+    """Nov 9. Written out because the no-padding date code isn't portable."""
+    return f"{d:%b} {d.day}"
 
 
 def load_config(path):
