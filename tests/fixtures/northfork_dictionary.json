@@ -1,0 +1,43 @@
+{
+ "version": 1,
+ "metrics": {
+  "downtime": {
+   "status": "confirmed",
+   "record": "mes_downtime",
+   "include": "every MES stop",
+   "exclude_categories": [],
+   "unit": "min",
+   "confirmed_by": "Pat Lee",
+   "confirmed_on": "2026-11-18",
+   "meaning": "Every MES stop counts, changeovers (CHG) and planned maintenance (PM) included.",
+   "owner": {
+    "name": "Pat Lee",
+    "role": "Plant manager"
+   }
+  },
+  "scrap": {
+   "status": "confirmed",
+   "record": "mes_output",
+   "unit": "units",
+   "confirmed_by": "Pat Lee",
+   "confirmed_on": "2026-11-18",
+   "meaning": "MES true scrap only; rework is not scrap.",
+   "owner": {
+    "name": "Pat Lee",
+    "role": "Plant manager"
+   }
+  },
+  "good": {
+   "status": "confirmed",
+   "record": "mes_output",
+   "unit": "units",
+   "confirmed_by": "Pat Lee",
+   "confirmed_on": "2026-11-18",
+   "meaning": "MES good quantity is the record.",
+   "owner": {
+    "name": "Pat Lee",
+    "role": "Plant manager"
+   }
+  }
+ }
+}

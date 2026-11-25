@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and discussion
+    url: https://github.com/humagined/plant-watch/discussions
+    about: Ask how to use Plant Watch or share what you found.
+  - name: Report a security problem privately
+    url: https://github.com/humagined/plant-watch/security/advisories/new
+    about: Please don't report security problems in public issues.
+  - name: Walk through your report with Humagined
+    url: https://www.humagined.ai/book/bryce
+    about: Free 30-minute working session, available through January 31, 2027.

@@ -1,0 +1,17 @@
+{
+  "about": "A first use case per stage, written as the outcome an engagement would deliver. Used to name suggested starting points; the ranking itself is computed from findings.",
+  "stages": {
+    "prod::Downtime": {"title": "Trusted OEE and downtime reporting", "outcome": "One downtime number every report agrees on, with an agreed rule for changeovers and planned maintenance."},
+    "prod::Production Reporting": {"title": "Trusted OEE and downtime reporting", "outcome": "Morning numbers that tie out across the MES, the shift log and the reports, with no hand-built totals."},
+    "prod::Quality": {"title": "One scrap and yield number", "outcome": "Scrap, rework and yield defined once and counted the same way in every system."},
+    "prod::Work Order": {"title": "Clean job and work order data", "outcome": "Every shift record joins to a work order, so cost, schedule and OEE can be traced job by job."},
+    "o2c::Shipping": {"title": "On-time delivery you can defend", "outcome": "One definition of on time, measured from the same dates in every report."},
+    "o2c::Fulfillment": {"title": "A past-due backlog everyone believes", "outcome": "Backlog and fill rate built from the same order and shipment records."},
+    "o2c::Sales Order": {"title": "Bookings from one source", "outcome": "Orders counted once, with clear rules for changes and cancellations."},
+    "cost::Standard Cost": {"title": "Margin on real costs", "outcome": "Scrap and downtime priced from agreed standard costs and rates."},
+    "ap::Receiving": {"title": "Supplier on-time delivery", "outcome": "Receipts matched to purchase orders with one rule for what counts as on time."},
+    "gl::Reporting": {"title": "Cost of quality in the books", "outcome": "Quality costs flowing from the floor into reporting under one definition."},
+    "gl::Budget": {"title": "Targets you can plan from", "outcome": "One budget and one current forecast, with targets and attainment all measured against the same ones."},
+    "gl::Periods": {"title": "One working calendar", "outcome": "Every daily and weekly figure spread over the same working days, shifts and hours."}
+  }
+}

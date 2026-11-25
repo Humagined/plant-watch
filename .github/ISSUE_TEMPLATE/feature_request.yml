@@ -1,0 +1,26 @@
+name: Idea or request
+description: Something Plant Watch should check, read, or report
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tell us what would make Plant Watch more useful on your floor. Humagined reviews ideas on a best-effort basis.
+
+        **Never paste real plant data here.**
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to catch or answer?
+      description: For example, "Our scrap number in the ERP never matches the quality log and we can't tell why."
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you want Plant Watch to do?
+  - type: input
+    id: systems
+    attributes:
+      label: Systems or files involved
+      placeholder: "Plex, Epicor, Ignition, Excel, SharePoint PDFs, ..."

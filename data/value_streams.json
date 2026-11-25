@@ -1,0 +1,226 @@
+{
+ "source": "Humagined manufacturing value streams (names, stages, KPI anchors only)",
+ "streams": [
+  {
+   "key": "o2c",
+   "title": "Order-to-Cash",
+   "subtitle": "Customer master → order → fulfillment → shipping → invoice → cash → ledger.",
+   "stages": [
+    {
+     "key": "o2c::Customer Master",
+     "name": "Customer Master",
+     "kpis": []
+    },
+    {
+     "key": "o2c::Quote",
+     "name": "Quote",
+     "kpis": []
+    },
+    {
+     "key": "o2c::Pricing",
+     "name": "Pricing",
+     "kpis": [
+      "Average selling price"
+     ]
+    },
+    {
+     "key": "o2c::Sales Order",
+     "name": "Sales Order",
+     "kpis": [
+      "Bookings"
+     ]
+    },
+    {
+     "key": "o2c::Fulfillment",
+     "name": "Fulfillment",
+     "kpis": [
+      "Fill rate",
+      "Past-due backlog"
+     ]
+    },
+    {
+     "key": "o2c::Shipping",
+     "name": "Shipping",
+     "kpis": [
+      "Perfect order rate",
+      "On-time delivery"
+     ]
+    },
+    {
+     "key": "o2c::AR Invoicing",
+     "name": "AR Invoicing",
+     "kpis": [
+      "Revenue",
+      "Invoice accuracy"
+     ]
+    },
+    {
+     "key": "o2c::Cash Application",
+     "name": "Cash Application",
+     "kpis": [
+      "Order-to-cash cycle time"
+     ]
+    },
+    {
+     "key": "o2c::AR Aging",
+     "name": "AR Aging",
+     "kpis": [
+      "Days sales outstanding"
+     ]
+    },
+    {
+     "key": "o2c::AR → GL",
+     "name": "AR → GL",
+     "kpis": []
+    }
+   ]
+  },
+  {
+   "key": "ap",
+   "title": "Accounts Payable",
+   "subtitle": "Supplier master → PO → receiving → voucher → payment → ledger.",
+   "stages": [
+    {
+     "key": "ap::Procurement",
+     "name": "Procurement",
+     "kpis": []
+    },
+    {
+     "key": "ap::Supplier Master",
+     "name": "Supplier Master",
+     "kpis": []
+    },
+    {
+     "key": "ap::Receiving",
+     "name": "Receiving",
+     "kpis": [
+      "Supplier on-time delivery"
+     ]
+    },
+    {
+     "key": "ap::AP Voucher",
+     "name": "AP Voucher",
+     "kpis": [
+      "Purchase price variance"
+     ]
+    },
+    {
+     "key": "ap::Payment",
+     "name": "Payment",
+     "kpis": [
+      "Days payable outstanding"
+     ]
+    },
+    {
+     "key": "ap::AP → GL",
+     "name": "AP → GL",
+     "kpis": []
+    }
+   ]
+  },
+  {
+   "key": "gl",
+   "title": "General Ledger",
+   "subtitle": "Chart of accounts → periods → journals → balances → reporting.",
+   "stages": [
+    {
+     "key": "gl::Chart of Accounts",
+     "name": "Chart of Accounts",
+     "kpis": []
+    },
+    {
+     "key": "gl::Periods",
+     "name": "Periods",
+     "kpis": []
+    },
+    {
+     "key": "gl::Journals",
+     "name": "Journals",
+     "kpis": []
+    },
+    {
+     "key": "gl::Balances",
+     "name": "Balances",
+     "kpis": []
+    },
+    {
+     "key": "gl::Reporting",
+     "name": "Reporting",
+     "kpis": [
+      "Operating margin",
+      "Cost of quality"
+     ]
+    },
+    {
+     "key": "gl::Budget",
+     "name": "Budget",
+     "kpis": []
+    }
+   ]
+  },
+  {
+   "key": "prod",
+   "title": "Production / Shop Floor",
+   "subtitle": "Work order → production reporting → downtime → quality. Where the operating metrics are born.",
+   "stages": [
+    {
+     "key": "prod::Work Order",
+     "name": "Work Order",
+     "kpis": [
+      "Schedule adherence"
+     ]
+    },
+    {
+     "key": "prod::Production Reporting",
+     "name": "Production Reporting",
+     "kpis": [
+      "Overall equipment effectiveness"
+     ]
+    },
+    {
+     "key": "prod::Downtime",
+     "name": "Downtime",
+     "kpis": []
+    },
+    {
+     "key": "prod::Quality",
+     "name": "Quality",
+     "kpis": [
+      "Scrap rate",
+      "First-pass yield",
+      "PPM defective"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "ship",
+   "title": "Shipping / Logistics",
+   "subtitle": "Inter-plant transfers and logistics movements.",
+   "stages": [
+    {
+     "key": "ship::Inter-plant",
+     "name": "Inter-plant",
+     "kpis": [
+      "Inventory turns",
+      "Days of supply"
+     ]
+    }
+   ]
+  },
+  {
+   "key": "cost",
+   "title": "Cost / Margin",
+   "subtitle": "Standard cost and the margin spine.",
+   "stages": [
+    {
+     "key": "cost::Standard Cost",
+     "name": "Standard Cost",
+     "kpis": [
+      "Gross margin"
+     ]
+    }
+   ]
+  }
+ ]
+}

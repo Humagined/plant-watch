@@ -1,0 +1,15 @@
+{
+  "name": "humagined",
+  "owner": {
+    "name": "Humagined Inc.",
+    "url": "https://www.humagined.ai"
+  },
+  "plugins": [
+    {
+      "name": "plant-watch",
+      "source": "./",
+      "description": "Finds where your plant's numbers disagree, and why."
+    }
+  ],
+  "description": "Free, open source Claude plugins for manufacturers from Humagined Inc."
+}

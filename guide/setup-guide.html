@@ -1,0 +1,81 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Plant Watch setup guide</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=IBM+Plex+Sans:wght@400;500;600&display=block">
+<style>
+@page{size:Letter;margin:0}
+*{box-sizing:border-box}html{-webkit-print-color-adjust:exact}
+body{margin:0;background:#F6F6F6;color:#0E1A2B;font:400 11.5pt/1.5 "IBM Plex Sans",sans-serif}
+.page{width:8.5in;height:11in;padding:.8in .85in .7in;background:#F6F6F6;break-after:page;position:relative;overflow:hidden}
+.page:last-child{break-after:auto}
+h1,h2,h3{font-family:Archivo,sans-serif;letter-spacing:-.02em;line-height:1.1;margin:0}
+h1{font-weight:800;font-size:42pt;line-height:1.02}h2{font-weight:800;font-size:25pt;margin-bottom:.2in}h3{font-weight:700;font-size:14pt;margin:.22in 0 .06in}
+.eye{font-weight:600;font-size:10pt;letter-spacing:.2em;text-transform:uppercase;color:#1B7169;margin:0 0 .14in}
+p{margin:0 0 .1in}.lead{font-size:14pt;color:#3A4A5E}
+.btn{display:inline-block;background:#F2A541;color:#0E1A2B;font-weight:600;font-size:13pt;padding:.15in .28in;border-radius:8px;text-decoration:none}
+a{color:#1B7169}
+ul,ol{margin:0 0 .1in;padding-left:.24in}li{margin-bottom:.065in}
+.card{background:#fff;border:1px solid #DBDBDB;border-radius:14px;padding:.2in .24in;margin-bottom:.16in}
+.card h3{margin-top:0}.two{display:grid;grid-template-columns:1fr 1fr;gap:.18in}
+.step{display:grid;grid-template-columns:.5in 1fr;gap:.1in;margin-bottom:.14in}.n{font:800 24pt/1 Archivo,sans-serif;color:#1B7169}
+.navy{background:#0E1A2B;color:#F6F6F6;border:0}.navy a{color:#3CCFBF}.navy p:last-child,.card p:last-child,.card ul:last-child,.card ol:last-child{margin-bottom:0}
+.foot{position:absolute;left:.85in;right:.85in;bottom:.4in;display:flex;justify-content:space-between;font-size:9pt;color:#5C6A7B}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DBDBDB}th,td{text-align:left;vertical-align:top;padding:.09in .13in;border-bottom:1px solid #E2E2E2}th{font-weight:600;color:#1B7169}
+</style></head><body>
+<section class="page"><div style="padding-top:1.5in"><p class="eye">Free and open source</p><h1>Plant Watch<br>setup guide</h1>
+<p class="lead" style="margin:.3in 0 .4in;max-width:5.6in">Find where your plant's numbers disagree, and why. For plant managers. No code needed.</p>
+<a class="btn" href="https://www.humagined.ai/plantwatch">Download Plugin Free &rarr;</a>
+<p style="margin-top:.15in"><a href="https://www.humagined.ai/plantwatch">humagined.ai/plantwatch</a></p></div>
+<div class="card" style="margin-top:.8in"><h3>What you need</h3><ul><li>The Claude desktop app and a paid Claude plan.</li><li>The file plant-watch.zip. Leave it zipped.</li><li>A folder on your computer for Plant Watch to work in.</li></ul></div>
+<div class="foot"><span>A holiday gift to manufacturers from Humagined Inc.</span><span>1</span></div></section>
+
+<section class="page"><p class="eye">What to expect</p><h2>What it finds, and what it never does</h2>
+<div class="card"><h3>What it finds</h3><ul>
+<li><b>Numbers that disagree across systems.</b> OEE says one thing in the MES and another in the spreadsheet.</li>
+<li><b>Definitions that don't match.</b> Same name, different metric. Downtime with or without changeovers, for example.</li>
+<li><b>Spreadsheet errors.</b> Broken formulas, typed-over numbers, and ranges that stopped growing.</li>
+<li><b>Reports that drifted from the data.</b> A weekly pack that no longer ties back to its exports.</li></ul>
+<p>It all lands in one <b>Metric Mismatch Report</b>. Each finding names the file, page or cell it came from.</p></div>
+<div class="card"><h3>What it never does</h3><ul>
+<li><b>It sends nothing on its own.</b> No account, no telemetry and no network calls of its own.</li>
+<li><b>It doesn't change your source data.</b> Results go in their own plant-watch folder.</li>
+<li><b>It doesn't decide what your metrics mean.</b> It asks you and records your answer.</li></ul></div>
+<div class="card navy"><p><b>Claude processes what you share.</b> That happens under your Claude plan's terms. Plant Watch adds no other destination. If you give it a SharePoint or OneDrive link, Claude reads that report through your own Microsoft 365 connection.</p></div>
+<div class="foot"><span>Plant Watch setup guide</span><span>2</span></div></section>
+
+<section class="page"><p class="eye">About two minutes</p><h2>Install it</h2>
+<div class="step"><div class="n">1</div><div><b>Download.</b> Get plant-watch.zip from <a href="https://www.humagined.ai/plantwatch">humagined.ai/plantwatch</a>. Don't unzip it.</div></div>
+<div class="step"><div class="n">2</div><div><b>Open Plugins.</b> In the Claude desktop app, choose <b>Customize</b>, then <b>Plugins</b>.</div></div>
+<div class="step"><div class="n">3</div><div><b>Upload it.</b> Choose <b>Add</b>, then <b>Upload plugin</b>, and select the zip. Claude reminds you to install only plugins you trust. That's normal.</div></div>
+<div class="step"><div class="n">4</div><div><b>Pick a working folder.</b> Start a task in a folder Plant Watch can use.</div></div>
+<p>Labels can change. If one looks different, use the upload option on the Plugins page.</p>
+<h3 style="margin-top:.3in">Can't upload it? Send this to your IT team</h3>
+<div class="card"><p>Plant Watch is a free, open source Claude plugin under Apache 2.0. If your company manages Claude, an admin may need to add it.</p>
+<ul><li>All the code is open to review at <a href="https://github.com/humagined/plant-watch">github.com/humagined/plant-watch</a>.</li>
+<li>It runs on the Python standard library. It makes no network calls of its own.</li>
+<li>It reads the files people point it at. It writes results in a plant-watch folder.</li>
+<li>Report links are optional. They use the person's own Microsoft 365 connection.</li>
+<li>Report security problems privately, as SECURITY.md explains.</li></ul></div>
+<div class="foot"><span>Plant Watch setup guide</span><span>3</span></div></section>
+
+<section class="page"><p class="eye">Your first run</p><h2>Try the synthetic shop</h2>
+<p>Northfork Precision is a fictional shop that comes in the download. You don't need your own data yet.</p>
+<div class="step"><div class="n">1</div><div>Say <b>"Set up Plant Watch with the synthetic shop."</b></div></div>
+<div class="step"><div class="n">2</div><div>Check the list of sources. Say yes if it looks right.</div></div>
+<div class="step"><div class="n">3</div><div>Say what each shared metric should mean. "Not settled" is a fine answer.</div></div>
+<div class="step"><div class="n">4</div><div>Open the Metric Mismatch Report.</div></div>
+<h2 style="margin-top:.35in">Then use your own data</h2>
+<div class="step"><div class="n">1</div><div>Put copies of a few exports, spreadsheets and report PDFs in one folder.</div></div>
+<div class="step"><div class="n">2</div><div>Say <b>"Set up Plant Watch"</b> and name that folder.</div></div>
+<div class="step"><div class="n">3</div><div>Have the person who owns each metric nearby. Plant Watch asks who is accountable.</div></div>
+<div class="step"><div class="n">4</div><div>Check its findings before you act on them.</div></div>
+<div class="foot"><span>Plant Watch setup guide</span><span>4</span></div></section>
+
+<section class="page"><p class="eye">Every day</p><h2>Things to say</h2>
+<table><tr><th>Say this</th><th>What happens</th></tr>
+<tr><td>"Set up Plant Watch"</td><td>First run. Builds the full Metric Mismatch Report.</td></tr>
+<tr><td>"Check this report"</td><td>Adds a report so its figures are checked every time.</td></tr>
+<tr><td>"What changed?"</td><td>Checks again. Shows what's new and what cleared.</td></tr>
+<tr><td>"Export the findings"</td><td>Saves your findings and confirmed definitions as files you keep.</td></tr></table>
+<h3>Support</h3><p>Plant Watch is community supported. Humagined responds on a best-effort basis. There is no SLA. <b>Never post real plant data</b> in an issue. Use the synthetic shop instead.</p>
+<div class="card navy" style="margin-top:.28in"><h3>Found mismatches? Let's walk through them.</h3><p>Book a free 30-minute working session through January 31, 2027.</p><p><a href="https://www.humagined.ai/book/bryce">humagined.ai/book/bryce</a></p></div>
+<p style="font-size:9.5pt;color:#5C6A7B;margin-top:.25in">Free and open source under Apache 2.0. Provided as-is, without warranty of any kind. Plant Watch is built for Claude. It is not made, endorsed or supported by Anthropic. Claude is a trademark of Anthropic, PBC. Humagined, Plant Watch and TessereX are trademarks of Humagined Inc.</p>
+<div class="foot"><span>Plant Watch setup guide</span><span>5</span></div></section></body></html>

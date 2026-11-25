@@ -1,0 +1,27 @@
+{
+  "plant": "Northfork Precision",
+  "folder": "{PLANT}",
+  "sources": [
+    {"id": "mes_downtime", "label": "MES downtime events", "glob": "exports/mes_downtime_events_*.csv", "kind": "events",
+     "date": "production_day", "shift": "shift", "entity": "asset_id", "measures": {"downtime": "duration_min"},
+     "category": "reason_code", "record_for": ["downtime"]},
+    {"id": "mes_output", "label": "MES production output", "glob": "exports/mes_production_output_*.csv", "kind": "rows",
+     "date": "production_day", "shift": "shift", "entity": "asset_id", "key": "production_wo", "key_master": "erp_wo",
+     "measures": {"good": "good_qty", "scrap": "scrap_qty"}, "record_for": ["good", "scrap"]},
+    {"id": "planning", "label": "Planning schedule", "glob": "exports/planning_schedule_*.csv", "kind": "rows",
+     "date": "production_day", "shift": "shift", "entity": "asset_id", "measures": {"planned": "planned_qty"}},
+    {"id": "shift_log", "label": "Supervisor shift log", "glob": "spreadsheets/supervisor_shift_log_*.xlsx",
+     "sheet": "Shift Log", "kind": "rows", "date": "Date", "shift": "Shift", "entity": "Machine", "key": "Job",
+     "key_master": "erp_wo", "measures": {"good": "Good", "scrap": "Scrap", "downtime": "Downtime (min)"},
+     "notes_sheet": "Notes", "stage": "prod::Production Reporting"},
+    {"id": "reason_codes", "label": "MES reason codes", "glob": "exports/mes_reason_codes.csv", "kind": "codes",
+     "code": "reason_code", "flags": {"counts_as_downtime": "downtime"}},
+    {"id": "erp_wo", "label": "ERP production work orders", "glob": "erp/production_work_orders.csv", "kind": "master",
+     "key": "production_wo", "stage": "prod::Work Order"},
+    {"id": "weekly_pack", "label": "Weekly OEE pack", "glob": "reports/Northfork_weekly_OEE_pack_*.pdf", "kind": "report",
+     "series": "Northfork weekly OEE pack", "measures": ["good", "scrap", "downtime"]},
+    {"id": "daily_summary", "label": "Daily production summary (SharePoint)", "kind": "link",
+     "path": "{LINKED}/daily_production_summary.xlsx", "expect": "daily", "measures": ["good", "scrap", "downtime"],
+     "stage": "prod::Production Reporting"}
+  ]
+}

@@ -1,0 +1,9 @@
+part_number,description,revision,uom,standard_cost
+PN-1001-A,"Manifold block, 6061",C,each,38.40
+PN-1014-B,"Sensor housing, 6061",B,each,21.75
+PN-1022-A,"Mounting plate, 304 SS",A,each,17.10
+PN-1040-C,"Pump cover, 6061",D,each,44.90
+PN-2003-A,"Shaft, 4140",B,each,12.60
+PN-2011-B,"Bushing, 932 bronze",A,each,6.85
+PN-2027-A,"Fitting, 316 SS",C,each,9.30
+PN-2035-C,"Spacer, 6061",A,each,3.95

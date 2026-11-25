@@ -1,0 +1,3 @@
+maintenance_wo,asset_id,type,opened_at,closed_at,description,status
+MWO-3410,MILL-VX2-02,PM,2026-11-12T06:32-07:00,2026-11-12T07:32-07:00,"Quarterly PM: way lube, coolant concentration, filters",Closed
+MWO-3424,LATHE-TX2-02,Corrective,2026-11-16T16:05-07:00,2026-11-16T17:15-07:00,"Spindle drive alarm 2041. Reseated drive connector, replaced cooling fan.",Closed

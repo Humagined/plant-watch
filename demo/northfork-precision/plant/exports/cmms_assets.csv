@@ -1,0 +1,7 @@
+asset_id,name,make,model,cell,work_center,status
+MILL-VX2-01,Mill 1,Northfork shop,VX2,Mill cell,WC-MILL,Active
+MILL-VX2-02,Mill 2,Northfork shop,VX2,Mill cell,WC-MILL,Active
+MILL-HX4-01,Mill 3,Northfork shop,HX4,Mill cell,WC-MILL,Active
+LATHE-TX2-01,Lathe 1,Northfork shop,TX2,Turn cell,WC-TURN,Active
+LATHE-TX2-02,Lathe 2,Northfork shop,TX2,Turn cell,WC-TURN,Active
+LATHE-CX1-01,Lathe 3,Northfork shop,CX1,Turn cell,WC-TURN,Active

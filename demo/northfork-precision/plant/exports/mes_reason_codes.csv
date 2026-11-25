@@ -1,0 +1,9 @@
+reason_code,description,category,counts_as_downtime
+CHG,Changeover / setup,Setup,Y
+PM,Planned maintenance,Planned,Y
+MECH,Mechanical fault,Unplanned,Y
+ELEC,Electrical / control fault,Unplanned,Y
+MAT,Waiting on material,Unplanned,Y
+OPR,No operator,Unplanned,Y
+QA,Quality hold / first-article,Unplanned,Y
+TOOL,Tool change / breakage,Unplanned,Y

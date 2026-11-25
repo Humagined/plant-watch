@@ -1,0 +1,65 @@
+name: Bug report
+description: Something in Plant Watch isn't working right
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping make Plant Watch better. Humagined responds on a best-effort basis.
+
+        **Never paste real plant data here.** Use the synthetic shop in `demo/`, or redact names, part numbers, customers and figures first.
+
+        Security problem? Don't file it here. See SECURITY.md.
+  - type: dropdown
+    id: skill
+    attributes:
+      label: Which part of Plant Watch?
+      options:
+        - Set up (watch-setup)
+        - Re-check (watch)
+        - Add a report (add-report)
+        - Export findings (export-findings)
+        - Install
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What you said to Claude, and what Plant Watch did.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: dropdown
+    id: data
+    attributes:
+      label: Can you reproduce it with the synthetic shop?
+      options:
+        - "Yes, with demo/northfork-precision"
+        - "No, only with my own data (redacted details below)"
+        - Haven't tried
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: File types involved
+      description: For example, "ERP export as CSV, Excel bowler with macros, weekly report PDF." Describe the shape, not the contents.
+  - type: input
+    id: environment
+    attributes:
+      label: Where are you running it?
+      placeholder: "Claude Code on macOS, Claude desktop app on Windows, ..."
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Before you submit
+      options:
+        - label: This issue contains no real plant, customer or employee data.
+          required: true

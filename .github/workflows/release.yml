@@ -1,0 +1,29 @@
+name: Release
+# Builds plant-watch.zip and attaches it to the GitHub Release, so
+# releases/latest/download/plant-watch.zip always serves the newest version.
+on:
+  release:
+    types: [published]
+permissions:
+  contents: write
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+      - name: The release tag matches the plugin version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          python -c "import json, os, sys; v = json.load(open('.claude-plugin/plugin.json'))['version']; sys.exit(os.environ['TAG'] != 'v' + v and f'tag {os.environ[\"TAG\"]} is not v{v}')"
+      - run: python build/package.py
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: gh release upload "$TAG" dist/plant-watch.zip --clobber
