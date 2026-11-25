@@ -23,7 +23,6 @@ jobs:
           python -c "import json, os, sys; v = json.load(open('plugin/.claude-plugin/plugin.json'))['version']; sys.exit(os.environ['TAG'] != 'v' + v and f'tag {os.environ[\"TAG\"]} is not v{v}')"
       - run: python build/package.py
       - name: Attach to the release
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$TAG" dist/plant-watch.zip --clobber
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
+        with:
+          files: dist/plant-watch.zip

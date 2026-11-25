@@ -268,11 +268,12 @@ def test_the_plugin_folder_stands_alone_and_holds_only_what_ships():
     import subprocess as sp
     names = sp.run(["git", "ls-files", "plugin"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
     kinds = {Path(n).suffix for n in names}
-    assert kinds <= {".md", ".json", ".py", ".png", ".jpg", ".ttf", ".txt", ""}, kinds
+    assert kinds <= {".md", ".json", ".py", ".png", ""}, kinds
     assert not any(p in n for n in names for p in ("/tests/", "/bin/", "/hooks/", ".github", "requirements"))
     for f in ("LICENSE", "NOTICE"):
         assert (ROOT / f).read_bytes() == (ROOT / "plugin" / f).read_bytes()
     for n in names:
         if n.endswith(".py"):
             text = (ROOT / n).read_text(encoding="utf-8")
+            assert not any(x in text for x in (".ttf", ".jpg", ".png", "base64")), n
             assert "environ" not in text and "getenv" not in text, n

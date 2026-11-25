@@ -1,7 +1,6 @@
 """The Metric Mismatch Report: HTML for reading, PDF for printing. Every number comes from the
 ledger, the dictionary and the snapshots; nothing here is typed by the model."""
 
-import base64
 import html
 import re
 import json
@@ -11,6 +10,7 @@ from pathlib import Path
 
 import detect
 import ledger
+import mark
 import pdfmini
 import readiness
 import sources as S
@@ -201,17 +201,17 @@ CSS = """
 :root{--mist:#F6F6F6;--navy:#0E1A2B;--text2:#3A4A5E;--muted:#5C6A7B;--teal:#1B7169;--amber:#F2A541;--card:#fff;--line:#DBDBDB;
 --bad:#B3261E;--warn:#8A5A00;color-scheme:light}
 *{box-sizing:border-box}html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-body{margin:0;background:var(--mist);color:var(--navy);font:16px/1.55 "Report Text",sans-serif}
-.in{max-width:1120px;margin:0 auto;padding:0 24px}h1,h2,h3{font-family:"Report Display",sans-serif;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0}
+body{margin:0;background:var(--mist);color:var(--navy);font:16px/1.55 "IBM Plex Sans","Segoe UI","Helvetica Neue",Arial,sans-serif}
+.in{max-width:1120px;margin:0 auto;padding:0 24px}h1,h2,h3{font-family:Archivo,"Helvetica Neue","Segoe UI",Arial,sans-serif;font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:0}
 .eyebrow{font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--teal);font-weight:600;margin:0}
 .top{background:var(--navy);color:var(--mist);padding:28px 0 44px}.top .eyebrow{color:#3CCFBF}.top h1{font-size:clamp(34px,5vw,56px);margin:10px 0 14px}
-.top p{color:#C9D2DC;margin:0;max-width:720px}.brand{display:flex;align-items:center;gap:12px;font:800 20px "Report Display",sans-serif;margin-bottom:44px}
-.brand span{margin-left:auto;font:600 14px "Report Text",sans-serif;color:#9FB0C2}
+.top p{color:#C9D2DC;margin:0;max-width:720px}.brand{display:flex;align-items:center;gap:12px;font:800 20px Archivo,"Helvetica Neue","Segoe UI",Arial,sans-serif;margin-bottom:44px}
+.brand span{margin-left:auto;font:600 14px "IBM Plex Sans","Segoe UI","Helvetica Neue",Arial,sans-serif;color:#9FB0C2}
 h2{font-size:30px;margin:56px 0 10px}h3{font-size:21px;margin:30px 0 8px}p{margin:8px 0}.muted{color:var(--muted)}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:22px 24px;margin:14px 0}.card>b{font-size:17px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin:16px 0}.lift{margin-top:-28px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
-.stat b{display:block;font:800 36px/1 "Report Display",sans-serif;font-variant-numeric:tabular-nums;margin-bottom:8px}.stat span{color:var(--text2);font-size:15px}
+.stat b{display:block;font:800 36px/1 Archivo,"Helvetica Neue","Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;margin-bottom:8px}.stat span{color:var(--text2);font-size:15px}
 .tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card);margin:12px 0}
 table{border-collapse:collapse;width:100%;font-size:15px}th,td{text-align:left;padding:11px 14px;border-bottom:1px solid #E2E2E2;vertical-align:top}
 th{color:var(--teal);font-weight:600;white-space:nowrap;border-bottom:2px solid var(--navy)}td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
@@ -219,7 +219,7 @@ tr:last-child td{border-bottom:0}code{font:13.5px ui-monospace,SFMono-Regular,Me
 .pill{display:inline-block;font-size:13px;padding:1px 10px;border-radius:99px;border:1px solid var(--line);color:var(--text2);white-space:nowrap}
 .sev1,.sev2{color:var(--bad);border-color:var(--bad)}.sev3,.sev4{color:var(--warn);border-color:var(--warn)}.new{color:var(--teal);border-color:var(--teal)}
 .ready{display:flex;gap:32px;align-items:center;background:var(--navy);color:var(--mist);border-radius:14px;padding:28px 32px;margin:16px 0;flex-wrap:wrap}
-.ready h3{margin:0;font-size:28px}.ready>div:last-child{flex:1;min-width:240px}.score{text-align:center}.score b{display:block;font:800 88px/1 "Report Display",sans-serif;color:var(--amber)}.score span{color:#C9D2DC}
+.ready h3{margin:0;font-size:28px}.ready>div:last-child{flex:1;min-width:240px}.score{text-align:center}.score b{display:block;font:800 88px/1 Archivo,"Helvetica Neue","Segoe UI",Arial,sans-serif;color:var(--amber)}.score span{color:#C9D2DC}
 .check{display:grid;grid-template-columns:1fr 1fr;gap:8px 32px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 24px;margin:10px 0}.check p{margin:2px 0}
 .bar{height:10px;border-radius:99px;background:#EAEAEA;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--teal)}
 @media(max-width:640px){.check{grid-template-columns:1fr}}
@@ -229,20 +229,6 @@ ol,ul{padding-left:22px;margin:8px 0}li{margin:4px 0}.end{background:var(--navy)
 .end small{color:#9FB0C2;font-size:14px;display:block;margin-top:18px}
 @media print{.card,.stat,tr{break-inside:avoid}h2,h3{break-after:avoid}}
 """
-
-
-def font_css():
-    """The fonts, inside the file: a report loads nothing from a network."""
-    out = []
-    for family, weight, name in (("Report Text", 400, pdfmini.REGULAR), ("Report Text", 600, pdfmini.BOLD),
-                                 ("Report Display", 800, pdfmini.DISPLAY)):
-        data = base64.b64encode((pdfmini.FONTS / f"{name}.ttf").read_bytes()).decode()
-        out.append(f"@font-face{{font-family:'{family}';font-weight:{weight};src:url(data:font/ttf;base64,{data}) format('truetype')}}")
-    return "".join(out)
-
-
-MARK_FILE = Path(__file__).resolve().parent.parent / "assets" / "humagined-mark.jpg"
-MARK = "data:image/jpeg;base64," + base64.b64encode(MARK_FILE.read_bytes()).decode()
 
 
 def ready_lines(m):
@@ -281,8 +267,8 @@ def render_html(m):
     H = []
     a = H.append
     a(f"<!doctype html><html lang='en'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>"
-      f"<title>Metric Mismatch Report: {e(m['plant'])}</title><style>{font_css()}{CSS}</style></head><body>")
-    a(f"<header class='top'><div class='in'><div class='brand'><img src='{MARK}' alt='Humagined' width='77' height='73'><span>Plant Watch</span></div>"
+      f"<title>Metric Mismatch Report: {e(m['plant'])}</title><style>{CSS}</style></head><body>")
+    a(f"<header class='top'><div class='in'><div class='brand'>{mark.svg(77)}<span>Plant Watch</span></div>"
       f"<p class='eyebrow'>Metric Mismatch Report</p><h1>{e(m['plant'])}</h1>"
       f"<p>Data through {e(long_date(m['as_of']))}. {len(m['sources'])} sources and {len(m['audits'])} workbooks checked. "
       "Findings are computed from the files listed here, not estimated.</p></div></header><main class='in'>")
@@ -548,7 +534,7 @@ def render_pdf(m):
     d.page(first=True)
     p = d.p
     p.rect(0, 570, 612, 222, NAVY)
-    p.image(LEFT, 712, 60, 56.6)
+    mark.draw(p, LEFT, 712, 60)
     p.text(RIGHT, 740, "Plant Watch", 10, bold=True, right=True, color="#9FB0C2")
     p.text(LEFT, 686, "METRIC MISMATCH REPORT", 9.5, bold=True, color="#3CCFBF")
     y = 650
@@ -634,7 +620,7 @@ def render_pdf(m):
         if gs:
             d.table(["Cell", "Formula", "Problem", "Fix"],
                     [[f"{g.get('sheet') or 'workbook'}!{g['where']}", g.get("formula") or "", g["problem"], g["fix"]]
-                     for g in gs[:EXCEL_ROWS_PER_WORKBOOK]], [92, 118, 172, 134])
+                     for g in gs[:EXCEL_ROWS_PER_WORKBOOK]], [100, 114, 170, 132])
         if len(gs) > EXCEL_ROWS_PER_WORKBOOK:
             d.text(f"And {len(gs) - EXCEL_ROWS_PER_WORKBOOK:,} more problem(s); export the findings for the rest.", 9, color=MUTED)
     if m["questions"]:

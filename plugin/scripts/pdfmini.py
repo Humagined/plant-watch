@@ -1,27 +1,32 @@
-"""A minimal PDF writer (text, lines, fills, links; the report's own fonts; US Letter). Standard library only.
+"""A minimal PDF writer (text, lines, fills, links; Helvetica; US Letter). Standard library only.
 
 Text is real text in a WinAnsi-encoded font, so a reader can extract the figures.
 """
 
-import json
 import zlib
-from pathlib import Path
 
-FONTS = Path(__file__).resolve().parent.parent / "assets" / "fonts"
-METRICS = json.loads((FONTS / "metrics.json").read_text(encoding="utf-8"))
-MARK = FONTS.parent / "humagined-mark.jpg"
-REGULAR, BOLD, DISPLAY = "text-400", "text-600", "display-800"
-ORDER = (REGULAR, BOLD, DISPLAY)
+_REG = ("278 278 355 556 556 889 667 191 333 333 389 584 278 333 278 278 556 556 556 556 556 556 556 556 556 556 278 278 584 584 "
+        "584 556 1015 667 667 722 722 667 611 778 722 278 500 667 556 833 722 778 667 778 722 667 611 722 667 944 667 667 611 278 "
+        "278 278 469 556 333 556 556 500 556 556 278 556 556 222 222 500 222 833 556 556 556 556 333 500 278 556 500 722 500 500 "
+        "500 334 260 334 584")
+_BOLD = ("278 333 474 556 556 889 722 238 333 333 389 584 278 333 278 278 556 556 556 556 556 556 556 556 556 556 333 333 584 584 "
+         "584 611 975 722 722 722 722 667 611 778 722 278 556 722 611 833 722 778 667 778 722 667 611 722 667 944 667 667 611 333 "
+         "278 333 584 556 333 556 611 556 611 556 333 611 611 278 278 556 278 889 611 611 611 611 389 556 333 611 556 778 556 556 "
+         "500 389 280 389 584")
+# Punctuation outside ASCII the reports use, the same in both weights to within a few units
+_MORE = {"›": 333, "‹": 333, "–": 556, "—": 1000, "‘": 250, "’": 250, "“": 400, "”": 400, "•": 350, "…": 1000, "×": 584,
+         "÷": 584, "°": 400, "€": 556}
 
 
-def _jpeg_size(data):
-    i = 2
-    while i < len(data):
-        marker, n = data[i + 1], int.from_bytes(data[i + 2:i + 4], "big")
-        if 0xC0 <= marker <= 0xC2:
-            return int.from_bytes(data[i + 7:i + 9], "big"), int.from_bytes(data[i + 5:i + 7], "big")
-        i += 2 + n
-    raise ValueError("not a JPEG")
+def _widths(table):
+    w = {32 + i: int(v) for i, v in enumerate(table.split())}
+    w.update({ch.encode("cp1252")[0]: v for ch, v in _MORE.items()})
+    return w
+
+
+REGULAR, BOLD, DISPLAY = "Helvetica", "Helvetica-Bold", "Helvetica-Bold"
+ORDER = ("Helvetica", "Helvetica-Bold")
+WIDTHS = {"Helvetica": _widths(_REG), "Helvetica-Bold": _widths(_BOLD)}
 
 
 def winansi(text):
@@ -34,8 +39,8 @@ def font_of(bold):
 
 
 def width(text, size, bold=False):
-    w = METRICS[font_of(bold)]["widths"]
-    return sum(w[b - 32] if b >= 32 else 0 for b in winansi(text)) * size / 1000
+    w = WIDTHS[font_of(bold)]
+    return sum(w.get(b, 556) for b in winansi(text)) * size / 1000
 
 
 def esc(text):
@@ -85,9 +90,6 @@ class Page:
         if border:
             self.ops.append(f"{_rgb(border)} RG 0.6 w {x:.1f} {y:.1f} {w:.1f} {h:.1f} re S")
 
-    def image(self, x, y, w, h):
-        self.ops.append(f"q {w:.1f} 0 0 {h:.1f} {x:.1f} {y:.1f} cm /Mark Do Q")
-
     def link(self, x, y, w, h, url):
         self.links.append((x, y, w, h, url))
 
@@ -99,24 +101,12 @@ def pdf(pages):
         objs.append(body if isinstance(body, bytes) else body.encode("cp1252"))
         return len(objs)
 
-    def stream(data, extra=""):
+    def stream(data):
         z = zlib.compress(data, 9)
-        return f"<< /Length {len(z)} /Filter /FlateDecode {extra}>>\nstream\n".encode() + z + b"\nendstream"
+        return f"<< /Length {len(z)} /Filter /FlateDecode >>\nstream\n".encode() + z + b"\nendstream"
 
-    fonts = []
-    for name in ORDER:
-        m, data = METRICS[name], (FONTS / f"{name}.ttf").read_bytes()
-        file = add(stream(data, f"/Length1 {len(data)} "))
-        desc = add(f"<< /Type /FontDescriptor /FontName /{m['name']} /Flags 32 /FontBBox [{' '.join(map(str, m['bbox']))}] "
-                   f"/ItalicAngle 0 /Ascent {m['ascent']} /Descent {m['descent']} /CapHeight {m['cap']} /StemV 90 "
-                   f"/FontFile2 {file} 0 R >>")
-        fonts.append(add(f"<< /Type /Font /Subtype /TrueType /BaseFont /{m['name']} /Encoding /WinAnsiEncoding "
-                         f"/FirstChar 32 /LastChar 255 /Widths [{' '.join(map(str, m['widths']))}] /FontDescriptor {desc} 0 R >>"))
+    fonts = [add(f"<< /Type /Font /Subtype /Type1 /BaseFont /{name} /Encoding /WinAnsiEncoding >>") for name in ORDER]
     res = " ".join(f"/F{i} {n} 0 R" for i, n in enumerate(fonts, 1))
-    jpg = MARK.read_bytes()
-    w, h = _jpeg_size(jpg)
-    mark = add(f"<< /Type /XObject /Subtype /Image /Width {w} /Height {h} /ColorSpace /DeviceRGB /BitsPerComponent 8 "
-               f"/Filter /DCTDecode /Length {len(jpg)} >>\nstream\n".encode() + jpg + b"\nendstream")
     kids = []
     for pg in pages:
         content = add(stream("\n".join(pg.ops).encode("cp1252")))
@@ -124,7 +114,7 @@ def pdf(pages):
                       f"/A << /S /URI /URI ({esc(u)}) >> >>") for x, y, w, h, u in pg.links]
         extra = f" /Annots [{' '.join(f'{a} 0 R' for a in annots)}]" if annots else ""
         kids.append(add(f"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents {content} 0 R "
-                        f"/Resources << /Font << {res} >> /XObject << /Mark {mark} 0 R >> >>{extra} >>"))
+                        f"/Resources << /Font << {res} >> >>{extra} >>"))
     objs[0] = b"<< /Type /Catalog /Pages 2 0 R >>"
     objs[1] = f"<< /Type /Pages /Kids [{' '.join(f'{k} 0 R' for k in kids)}] /Count {len(kids)} >>".encode()
     buf, offsets = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n"), []

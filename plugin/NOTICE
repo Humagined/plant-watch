@@ -4,16 +4,13 @@ Copyright 2026 Humagined Inc.
 This product is developed by Humagined Inc. (https://www.humagined.ai)
 and licensed under the Apache License, Version 2.0.
 
-Humagined, the Humagined mark and Plant Watch icon in this repository, Plant Watch and TessereX are trademarks of Humagined Inc.
+Humagined, the Humagined mark and the Plant Watch icon in this repository, Plant Watch and TessereX are trademarks of Humagined Inc.
 The Apache License does not grant permission to use these names or
 marks, except as required to describe the origin of the work and
 reproduce the content of this NOTICE file (Section 6).
 
 Plant Watch is built for Claude. It is not made, endorsed or supported
 by Anthropic. Claude is a trademark of Anthropic, PBC.
-
-The fonts in assets/fonts are subsets of Archivo and IBM Plex Sans, under
-the SIL Open Font License 1.1 (license files beside them).
 
 The synthetic shop data in demo/ (Northfork Precision) is fictional.
 Any resemblance to a real company is coincidental.
