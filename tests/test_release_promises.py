@@ -47,7 +47,7 @@ def demo(tmp_path):
 
 
 def test_the_shipped_code_imports_nothing_that_can_reach_a_network_or_start_a_program():
-    for f in (ROOT / "scripts").glob("*.py"):
+    for f in (ROOT / "plugin" / "scripts").glob("*.py"):
         for node in ast.walk(ast.parse(f.read_text(encoding="utf-8"))):
             names = [a.name for a in node.names] if isinstance(node, ast.Import) else \
                 [node.module or ""] if isinstance(node, ast.ImportFrom) else []
@@ -174,7 +174,7 @@ def test_the_package(tmp_path):
 
 
 def test_user_facing_words():
-    files = [p for d in ("skills", "data", "scripts", "demo") for p in (ROOT / d).rglob("*")
+    files = [p for d in ("plugin", "demo") for p in (ROOT / d).rglob("*")
              if p.suffix in (".md", ".json", ".py", ".csv")] + [ROOT / "README.md", ROOT / "SECURITY.md"]
     for p in files:
         t = p.read_text(encoding="utf-8").lower()
@@ -185,7 +185,7 @@ def test_user_facing_words():
 
 def test_command_line_refusal_is_plain_json(tmp_path):
     (tmp_path / "s.json").write_text(json.dumps({"folder": str(tmp_path), "sources": [{"id": "x", "kind": "rows", "glob": "../*"}]}), encoding="utf-8")
-    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "watch.py"), "inventory", "--config", str(tmp_path / "s.json")],
+    r = subprocess.run([sys.executable, str(ROOT / "plugin" / "scripts" / "watch.py"), "inventory", "--config", str(tmp_path / "s.json")],
                        capture_output=True, text=True)
     assert r.returncode == 1 and json.loads(r.stdout)["ok"] is False
 
@@ -197,12 +197,12 @@ def test_copy_makes_no_blanket_claims(demo):
     """People-facing text says what was read and what wasn't. (Instructions to Claude in the skills may say 'never'.)"""
     import re
     _, cfg, state = demo
-    for p in (ROOT / "README.md", ROOT / "SECURITY.md", DEMO / "README.md", ROOT / "guide" / "setup-guide.html",
-              ROOT / ".claude-plugin" / "plugin.json", ROOT / "data" / "use_cases.json"):
+    for p in (ROOT / "README.md", ROOT / "SECURITY.md", DEMO / "README.md", ROOT / "plugin" / "README.md", ROOT / "guide" / "setup-guide.html",
+              ROOT / "plugin" / ".claude-plugin" / "plugin.json", ROOT / "plugin" / "data" / "use_cases.json"):
         # The readiness question asks about "all"; it claims nothing.
         text = p.read_text(encoding="utf-8").replace("Are all of your definitions agreed upon?", "")
         assert not re.findall(BLANKET, text, re.I), p
-    for p in (ROOT / "skills").glob("*/SKILL.md"):
+    for p in (ROOT / "plugin" / "skills").glob("*/SKILL.md"):
         desc = re.search(r"^description:(.*)$", p.read_text(encoding="utf-8"), re.M).group(1)
         assert not re.findall(BLANKET, desc, re.I), p
     watch.run(cfg, state, date(2026, 11, 25))
@@ -262,3 +262,17 @@ def test_an_export_that_cannot_be_read_is_reported_and_counted_not_a_crash(demo)
     after = {c["key"]: c for c in r["readiness"]["checks"]}["sources"]
     assert after["parts"][-1]["good"] < before["parts"][-1]["good"]
     report.render(cfg, state, state.parent / "r.html", str(state.parent / "r.pdf"))
+
+
+def test_the_plugin_folder_stands_alone_and_holds_only_what_ships():
+    import subprocess as sp
+    names = sp.run(["git", "ls-files", "plugin"], cwd=ROOT, capture_output=True, text=True, check=True).stdout.split()
+    kinds = {Path(n).suffix for n in names}
+    assert kinds <= {".md", ".json", ".py", ".png", ".jpg", ".ttf", ".txt", ""}, kinds
+    assert not any(p in n for n in names for p in ("/tests/", "/bin/", "/hooks/", ".github", "requirements"))
+    for f in ("LICENSE", "NOTICE"):
+        assert (ROOT / f).read_bytes() == (ROOT / "plugin" / f).read_bytes()
+    for n in names:
+        if n.endswith(".py"):
+            text = (ROOT / n).read_text(encoding="utf-8")
+            assert "environ" not in text and "getenv" not in text, n

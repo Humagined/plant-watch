@@ -26,7 +26,8 @@ and/or `--state plant-watch/state`.
 
 ## 1. Find the sources
 
-If they want to try it first, use the fictional shop in this plugin, `demo/northfork-precision`: copy
+If they want to try it first, use the fictional shop in this plugin, `demo/northfork-precision`. If this copy of the
+plugin has no `demo` folder, say the shop comes in the download at humagined.ai/plantwatch, and stop there. Otherwise copy
 that folder into their working folder and use the copy's `plant` folder as the export folder and
 `linked/daily_production_summary.xlsx` as a linked report. Say it's made-up data.
 

@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT.parent / "scripts"))
+sys.path.insert(0, str(ROOT.parent / "plugin" / "scripts"))
 import pdftext  # noqa: E402
 
 KIT = Path(__file__).resolve().parent / "kit"

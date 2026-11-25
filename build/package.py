@@ -5,7 +5,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-INCLUDE = (".claude-plugin/plugin.json", ".claude-plugin/icon.png", "skills", "scripts", "data", "assets", "demo", "README.md", "LICENSE", "NOTICE", "SECURITY.md")
+INCLUDE = ("plugin", "demo", "README.md", "SECURITY.md")
 STAMP = (2026, 12, 1, 0, 0, 0)           # fixed, so the same source gives the same file
 
 
@@ -19,7 +19,10 @@ def build(out):
     out.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
         for name in files():
-            info = zipfile.ZipInfo(name, STAMP)
+            inside = name[len("plugin/"):] if name.startswith("plugin/") else name
+            if name == "plugin/README.md":         # the download carries the full one
+                continue
+            info = zipfile.ZipInfo(inside, STAMP)
             info.compress_type, info.external_attr = zipfile.ZIP_DEFLATED, 0o644 << 16
             z.writestr(info, (ROOT / name).read_bytes())
     return out
@@ -27,5 +30,5 @@ def build(out):
 
 if __name__ == "__main__":
     path = build(ROOT / "dist" / "plant-watch.zip")
-    version = json.loads((ROOT / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]
+    version = json.loads((ROOT / "plugin" / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))["version"]
     print(f"{path} ({path.stat().st_size:,} bytes, version {version})")

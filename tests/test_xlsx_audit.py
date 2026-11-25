@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "plugin" / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import xlsx_audit as xa  # noqa: E402
 import xlsx_fixture as fx  # noqa: E402
@@ -138,7 +138,7 @@ def test_circular_references_are_the_same_in_every_process(tmp_path):
     code = ("import sys, json; sys.path.insert(0, sys.argv[1]); import xlsx_audit as xa; "
             "print(json.dumps(sorted((f['cell'], f['loop']) for f in xa.audit(sys.argv[2])['findings'] "
             "if f['kind'] == 'circular_reference')))")
-    scripts = str(Path(__file__).resolve().parent.parent / "scripts")
+    scripts = str(Path(__file__).resolve().parent.parent / "plugin" / "scripts")
     runs = {subprocess.run([sys.executable, "-c", code, scripts, str(book)], capture_output=True, text=True, check=True,
                            env={**__import__("os").environ, "PYTHONHASHSEED": seed}).stdout for seed in ("1", "2", "3", "4")}
     assert len(runs) == 1 and json.loads(runs.pop())

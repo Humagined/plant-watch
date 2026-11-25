@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "plant-watch",
-      "source": "./",
+      "source": "./plugin",
       "description": "Finds where your plant's numbers disagree, and why."
     }
   ],

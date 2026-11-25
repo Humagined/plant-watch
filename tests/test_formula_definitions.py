@@ -4,7 +4,7 @@ import sys
 from datetime import date
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "plugin" / "scripts"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import detect  # noqa: E402
 import formula_defs as fd  # noqa: E402

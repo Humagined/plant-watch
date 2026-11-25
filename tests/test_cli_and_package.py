@@ -33,6 +33,6 @@ def test_scan_groups_daily_files_and_export_round_trips(tmp_path):
 
 
 def test_skill_descriptions_have_no_angle_brackets():
-    for skill in (ROOT / "skills").glob("*/SKILL.md"):
+    for skill in (ROOT / "plugin" / "skills").glob("*/SKILL.md"):
         desc = re.search(r"^description:(.*)$", skill.read_text(encoding="utf-8"), re.M).group(1)
         assert "<" not in desc and ">" not in desc, skill
