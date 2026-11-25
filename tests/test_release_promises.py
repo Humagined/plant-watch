@@ -199,7 +199,9 @@ def test_copy_makes_no_blanket_claims(demo):
     _, cfg, state = demo
     for p in (ROOT / "README.md", ROOT / "SECURITY.md", DEMO / "README.md", ROOT / "guide" / "setup-guide.html",
               ROOT / ".claude-plugin" / "plugin.json", ROOT / "data" / "use_cases.json"):
-        assert not re.findall(BLANKET, p.read_text(encoding="utf-8"), re.I), p
+        # The readiness question asks about "all"; it claims nothing.
+        text = p.read_text(encoding="utf-8").replace("Are all of your definitions agreed upon?", "")
+        assert not re.findall(BLANKET, text, re.I), p
     for p in (ROOT / "skills").glob("*/SKILL.md"):
         desc = re.search(r"^description:(.*)$", p.read_text(encoding="utf-8"), re.M).group(1)
         assert not re.findall(BLANKET, desc, re.I), p

@@ -15,13 +15,13 @@ MIN_CHECKS = 3
 REPORT_PROBLEMS = {"stale_link", "link_unreachable", "extraction_unverified", "report_vs_source", "report_definition_drift"}
 
 CHECKS = {
-    "meaning": ("Do your numbers mean one thing?",
+    "meaning": ("Are all of your definitions agreed upon?",
                 "An agent can't tell which version of a number you meant.",
                 "Settle the questions listed under the mismatches, starting with the first."),
     "records": ("Do your records connect?",
                 "An agent follows a job from one system to another by its number. A number that doesn't match is a dead end.",
                 "Agree on one format for job numbers, and correct the ones that don't match."),
-    "spreadsheets": ("Do your spreadsheets hold up?",
+    "spreadsheets": ("Do your data sources hold up?",
                      "An agent reads a broken formula's result as if it were right.",
                      "Fix the spreadsheet problems listed first."),
     "owners": ("Does someone own each number?",

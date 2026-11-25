@@ -23,9 +23,9 @@ The findings land in one **Metric Mismatch Report**, organized by value stream, 
 
 The report opens with a score from 0 to 100. It asks five plain questions of the files it read:
 
-1. Do your numbers mean one thing?
+1. Are all of your definitions agreed upon?
 2. Do your records connect?
-3. Do your spreadsheets hold up?
+3. Do your data sources hold up?
 4. Does someone own each number?
 5. Do your reports match your data?
 
