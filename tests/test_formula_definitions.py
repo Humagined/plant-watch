@@ -97,7 +97,7 @@ def test_run_report_and_inventory_carry_it_with_a_stable_identity(tmp_path):
 
     out = tmp_path / "r.html"
     report.render(cfg, state, out)
-    html = out.read_text()
+    html = out.read_text(encoding="utf-8")
     assert html.index("Same name, different calculation") < html.index("Excel errors at a glance")
     assert "[Run Hours]/([Planned Hours]-[PM Hours])" in html
 
@@ -126,7 +126,7 @@ def test_labels_land_on_the_right_metric_and_every_metric_on_a_real_stage():
         "Work Order": None, "Machine": None,
     }
     assert {k: detect.metric_for_label(k) for k in cases} == cases
-    streams = json.loads((Path(detect.DATA) / "value_streams.json").read_text())["streams"]
+    streams = json.loads((Path(detect.DATA) / "value_streams.json").read_text(encoding="utf-8"))["streams"]
     stages = {st["key"] for s in streams for st in s["stages"]}
     for m, info in detect.METRICS.items():
         assert info["stage"] in stages, m

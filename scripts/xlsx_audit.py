@@ -120,7 +120,10 @@ class Workbook:
     def __init__(self, path):
         self.path = Path(path)
         self.name = self.path.name
-        z = safeio.open_book(path)
+        with safeio.open_book(path) as z:       # closed before the audit, so the file is never held open
+            self._read(z)
+
+    def _read(self, z):
         names = set(z.namelist())
         rels = {r.get("Id"): r.get("Target") for r in
                 ET.fromstring(safeio.book_part(z, "xl/_rels/workbook.xml.rels")).findall("rel:Relationship", NS)}

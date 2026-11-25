@@ -184,7 +184,7 @@ def test_user_facing_words():
 
 
 def test_command_line_refusal_is_plain_json(tmp_path):
-    (tmp_path / "s.json").write_text(json.dumps({"folder": str(tmp_path), "sources": [{"id": "x", "kind": "rows", "glob": "../*"}]}))
+    (tmp_path / "s.json").write_text(json.dumps({"folder": str(tmp_path), "sources": [{"id": "x", "kind": "rows", "glob": "../*"}]}), encoding="utf-8")
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "watch.py"), "inventory", "--config", str(tmp_path / "s.json")],
                        capture_output=True, text=True)
     assert r.returncode == 1 and json.loads(r.stdout)["ok"] is False

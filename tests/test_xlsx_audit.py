@@ -22,7 +22,7 @@ def build_plant(tmp_path, through):
     out = tmp_path / "plant"
     subprocess.run([str(KIT_PY), str(KIT / "rolling.py"), "--through", through, "--out", str(out)],
                    check=True, capture_output=True)
-    key = json.loads((tmp_path / f"answer_key_{through}.json").read_text())
+    key = json.loads((tmp_path / f"answer_key_{through}.json").read_text(encoding="utf-8"))
     return out, key
 
 

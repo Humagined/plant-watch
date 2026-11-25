@@ -245,7 +245,7 @@ def run(cfg, state, as_of=None):
 
     def shown(p):
         try:
-            return str(Path(p).relative_to(cfg["folder"]))
+            return Path(p).relative_to(cfg["folder"]).as_posix()
         except ValueError:
             return str(p)
     for wb in sorted(copies):

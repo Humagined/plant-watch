@@ -19,14 +19,14 @@ def build(base, through):
     plant = base / "plant"
     subprocess.run([str(KIT_PY), str(KIT / "rolling.py"), "--through", through, "--out", str(plant)],
                    check=True, capture_output=True)
-    return plant, json.loads((base / f"answer_key_{through}.json").read_text())
+    return plant, json.loads((base / f"answer_key_{through}.json").read_text(encoding="utf-8"))
 
 
 def config(base, plant):
-    text = (ROOT / "fixtures" / "northfork_sources.json").read_text()
-    text = text.replace("{PLANT}", str(plant)).replace("{LINKED}", str(base / "linked"))
+    text = (ROOT / "fixtures" / "northfork_sources.json").read_text(encoding="utf-8")
+    text = text.replace("{PLANT}", plant.as_posix()).replace("{LINKED}", (base / "linked").as_posix())
     p = base / "sources.json"
-    p.write_text(text)
+    p.write_text(text, encoding="utf-8")
     return p
 
 
@@ -74,7 +74,7 @@ def read_reports(plant, state):
     ex = Path(state) / "extractions"
     ex.mkdir(parents=True, exist_ok=True)
     for pdf in sorted((plant / "reports").glob("*.pdf")):
-        (ex / (pdf.stem + ".json")).write_text(json.dumps(model_reading(pdf)))
+        (ex / (pdf.stem + ".json")).write_text(json.dumps(model_reading(pdf)), encoding="utf-8")
     linked = plant.parent / "linked" / "daily_production_summary.xlsx"
     if linked.exists():
-        (ex / "daily_production_summary.json").write_text(json.dumps(linked_reading(linked)))
+        (ex / "daily_production_summary.json").write_text(json.dumps(linked_reading(linked)), encoding="utf-8")

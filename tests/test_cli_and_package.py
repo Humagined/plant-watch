@@ -27,12 +27,12 @@ def test_scan_groups_daily_files_and_export_round_trips(tmp_path):
     csv_ = watch.export(state, tmp_path / "f.csv")
     js = watch.export(state, tmp_path / "f.json")
     assert csv_["count"] == js["count"] == 39
-    data = json.loads((tmp_path / "f.json").read_text())
+    data = json.loads((tmp_path / "f.json").read_text(encoding="utf-8"))
     assert data["schema"] == "plant-watch.findings/v1"
     assert (tmp_path / "f.csv").read_text(encoding="utf-8-sig").splitlines()[0].startswith("id,kind,category,stage")
 
 
 def test_skill_descriptions_have_no_angle_brackets():
     for skill in (ROOT / "skills").glob("*/SKILL.md"):
-        desc = re.search(r"^description:(.*)$", skill.read_text(), re.M).group(1)
+        desc = re.search(r"^description:(.*)$", skill.read_text(encoding="utf-8"), re.M).group(1)
         assert "<" not in desc and ">" not in desc, skill

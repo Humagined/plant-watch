@@ -108,11 +108,11 @@ def test_tampered_reading_is_not_compared(tmp_path):
     import json
     cfg, state, _ = setup_state(tmp_path, "2026-11-25")
     p = state / "extractions" / "Northfork_weekly_OEE_pack_2026-11-20.json"
-    ex = json.loads(p.read_text())
+    ex = json.loads(p.read_text(encoding="utf-8"))
     for f in ex["figures"]:
         if f["entity"] == "total" and f["metric"] == "downtime":
             f["quote"] = "Plant total 7,107 95 2,934 91.0%"   # not what the PDF says
-    p.write_text(json.dumps(ex))
+    p.write_text(json.dumps(ex), encoding="utf-8")
     watch.run(cfg, state, date(2026, 11, 25))
     kinds = {e["kind"] for e in ledger.load(state).values() if e["active"]}
     assert "extraction_unverified" in kinds
@@ -136,7 +136,7 @@ def test_report_ranks_use_cases_and_places_findings_on_stages(tmp_path):
         "prod::Quality", "prod::Production Reporting", "prod::Downtime"}
     scrap_cells = [e for e in excel if e["sheet"] == "Summary" and e["cell"].startswith("C")]
     assert scrap_cells and all(e["stage"] == "prod::Quality" for e in scrap_cells)
-    html_ = (tmp_path / "r.html").read_text()
+    html_ = (tmp_path / "r.html").read_text(encoding="utf-8")
     assert "Excel errors at a glance" in html_ and "maintenance_tracker.xlsx" in html_
     # The 13 #REF! cells left by the deleted column are one problem in the report, 13 cells in the ledger.
     assert len([e for e in scrap_cells if e["kind"] == "ref_error"]) == 13 and r["excel_problems"] < r["excel_total"]

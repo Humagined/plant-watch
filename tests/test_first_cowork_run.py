@@ -24,14 +24,14 @@ def run(base, exclude=None, edit_reading=None, cfg_path=None):
     cfg = S.load_config(cfg_path(base, plant) if cfg_path else nf.config(base, plant))
     state = base / "plant-watch" / "state"
     state.mkdir(parents=True)
-    d = json.loads(DICT.read_text())
+    d = json.loads(DICT.read_text(encoding="utf-8"))
     if exclude is not None:
         d["metrics"]["downtime"]["exclude_categories"] = exclude
-    (state / "dictionary.json").write_text(json.dumps(d))
+    (state / "dictionary.json").write_text(json.dumps(d), encoding="utf-8")
     nf.read_reports(plant, state)
     if edit_reading:
         p = state / "extractions" / "daily_production_summary.json"
-        p.write_text(json.dumps(edit_reading(json.loads(p.read_text()))))
+        p.write_text(json.dumps(edit_reading(json.loads(p.read_text(encoding="utf-8")))), encoding="utf-8")
     res = watch.run(cfg, state, date.fromisoformat(DAY4))
     return [e for e in ledger.load(state).values() if e["active"]], res, cfg, state
 
@@ -100,13 +100,13 @@ def test_pdf_keeps_the_stream_separator():
 
 def test_a_copy_of_a_workbook_elsewhere_in_the_folder_is_audited_once(tmp_path):
     def parent_folder(base, plant):
-        c = json.loads(nf.config(base, plant).read_text())
+        c = json.loads(nf.config(base, plant).read_text(encoding="utf-8"))
         c["folder"] = str(base)          # the person pointed Plant Watch at the whole folder
         for s in c["sources"]:
             if "glob" in s:
                 s["glob"] = "plant/" + s["glob"]
         p = base / "sources_parent.json"
-        p.write_text(json.dumps(c))
+        p.write_text(json.dumps(c), encoding="utf-8")
         return p
     _, res, cfg, state = run(tmp_path, cfg_path=parent_folder)
     names = [a["workbook"] for a in res["audits"]]
@@ -117,7 +117,7 @@ def test_a_copy_of_a_workbook_elsewhere_in_the_folder_is_audited_once(tmp_path):
     import report
     html, pdf = tmp_path / "plant-watch" / "r.html", tmp_path / "plant-watch" / "r.pdf"
     report.render(cfg, state, str(html), str(pdf))
-    text = html.read_text()
+    text = html.read_text(encoding="utf-8")
     assert text.count("<h3>supervisor_shift_log_Nov.xlsx</h3>") == 1
     assert "excel_saved/supervisor_shift_log_Nov.xlsx" in text and "checked twice" in text
     pdf_text = " ".join(" ".join(p or []) for p in pdftext.pages(pdf))

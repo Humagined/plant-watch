@@ -58,7 +58,10 @@ def _atomic(path, data):
     try:
         with os.fdopen(fd, "wb") as f:
             f.write(data)
-        os.replace(tmp, path)
+        try:
+            os.replace(tmp, path)
+        except PermissionError:
+            raise Refused(f"{path.name} couldn't be replaced. If it's open in another program, close it and try again.")
     except BaseException:
         if os.path.exists(tmp):
             os.unlink(tmp)

@@ -356,7 +356,7 @@ def weekly_pdf(path, sim, start, end, exclude_chg):
     figs = weekly_figures(sim, start, end, exclude_chg)
     p = pdfmini.Page()
     p.text(54, 740, "Northfork Precision", 16, bold=True)
-    p.text(54, 720, f"Weekly OEE pack: {start.strftime('%-d %b')} to {end.strftime('%-d %b %Y')}", 12)
+    p.text(54, 720, f"Weekly OEE pack: {start.day} {start:%b} to {end.day} {end:%b %Y}", 12)
     p.text(54, 704, "Prepared by the plant office from the supervisor shift log and MES.", 9, gray=0.4)
     y = 670
     cols = [("Machine", 54, False), ("Good", 250, True), ("Scrap", 320, True), ("Downtime (min)", 430, True),
@@ -536,7 +536,7 @@ def build(through, out_dir):
                   "report": "daily_production_summary.xlsx", "detail": f"not refreshed since {upto}"})
 
     key_path = out_dir.parent / f"answer_key_{through}.json"
-    key_path.write_text(json.dumps(key, indent=2, default=str))
+    key_path.write_text(json.dumps(key, indent=2, default=str), encoding="utf-8")
     print(f"Wrote {out_dir} as of {through} (day {key['day']}): {len(F)} expected findings -> {key_path.name}")
     return key
 
